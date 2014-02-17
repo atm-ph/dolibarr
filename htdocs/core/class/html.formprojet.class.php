@@ -115,7 +115,7 @@ class FormProjets
 							$disabled=0;
 							if (! $obj->fk_statut > 0)
 							{
-								$disabled=1;
+								$disabled=0;
 								$labeltoshow.=' - '.$langs->trans("Draft");
 							}
 							if ($socid > 0 && (! empty($obj->fk_soc) && $obj->fk_soc != $socid))
