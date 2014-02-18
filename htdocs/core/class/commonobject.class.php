@@ -2310,7 +2310,15 @@ abstract class CommonObject
 						$out .= $extrafields->showOutputField($key,$value);
 						break;
 					case "edit":
-						$out .= $extrafields->showInputField($key,$value);
+
+						$freeline='';
+						if (is_array($params) && count($params)>0) {
+							if (array_key_exists('freeline',$params)) {
+								$freeline='freeline';
+							}
+						}
+						
+						$out .= $extrafields->showInputField($key,$value,$freeline);
 						break;
 					}
 

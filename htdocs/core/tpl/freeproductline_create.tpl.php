@@ -164,7 +164,7 @@ else {
 			$newline = new FactureLigne($this->db);
 		}
 		if (is_object($newline)) {
-			print $newline->showOptionals($extrafieldsline,'edit',array('style'=>$bcnd[$var],'colspan'=>$coldisplay+8));
+			print $newline->showOptionals($extrafieldsline,'edit',array('style'=>$bcnd[$var],'colspan'=>$coldisplay+8,'freeline'=>1));
 		}
 	}
 		?>

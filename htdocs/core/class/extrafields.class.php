@@ -589,6 +589,12 @@ class ExtraFields
 		$unique=$this->attribute_unique[$key];
 		$required=$this->attribute_required[$key];
 		$param=$this->attribute_param[$key];
+		
+		if ($moreparam=='freeline') {
+			$key .= $moreparam;
+			$moreparam='';
+		}
+		
 		if ($type == 'date')
 		{
 			$showsize=10;
@@ -1120,6 +1126,37 @@ class ExtraFields
 				}
 				$array_options["options_".$key]=$value_key;
 			}
+			
+			// tray to get free line value
+			foreach ($extralabels as $key => $value)
+			{
+				
+				$key_type = $this->attribute_type[$key];
+				$specialkey=$key.'freeline';
+				if (in_array($key_type,array('date','datetime')))
+				{
+					// Clean parameters
+					$value_key=dol_mktime($_POST["options_".$specialkey."hour"], $_POST["options_".$specialkey."min"], 0, $_POST["options_".$specialkey."month"], $_POST["options_".$specialkey."day"], $_POST["options_".$specialkey."year"]);
+				}
+				else if (in_array($key_type,array('checkbox')))
+				{
+					$value_arr=GETPOST("options_".$specialkey);
+					$value_key=implode($value_arr,',');
+				}
+				else if (in_array($key_type,array('price','double')))
+				{
+					$value_arr=GETPOST("options_".$specialkey);
+					$value_key=price2num($value_arr);
+				}
+				else
+				{
+					$value_key=GETPOST("options_".$specialkey);
+				}
+				if (!empty($value_key)) {
+					$array_options["options_".$key]=$value_key;
+				}
+			}
+				
 
 			return $array_options;
 		}
