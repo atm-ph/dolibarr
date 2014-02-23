@@ -443,7 +443,7 @@ function restrictedArea($user, $features, $objectid=0, $dbtablename='', $feature
                 
                 // If multicompany and internal users with all permissions, check user is in correct entity
                 else if (! empty($conf->multicompany->enabled) && ($conf->entity!=1))
-                {                	
+                {   
                     $sql = "SELECT dbt.".$dbt_select;
                     $sql.= " FROM ".MAIN_DB_PREFIX.$dbtablename." as dbt";
                     $sql.= " WHERE dbt.".$dbt_select." = ".$objectid;
