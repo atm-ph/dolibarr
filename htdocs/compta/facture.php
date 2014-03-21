@@ -578,7 +578,6 @@ else if ($action == 'confirm_canceled' && $confirm == 'yes')
 // Convertir en reduc
 else if ($action == 'confirm_converttoreduc' && $confirm == 'yes' && $user->rights->facture->creer)
 {
-
 	$object->fetch($id);
 	$object->fetch_thirdparty();
 	$object->fetch_lines();
@@ -624,6 +623,7 @@ else if ($action == 'confirm_converttoreduc' && $confirm == 'yes' && $user->righ
 			$discount->tva_tx=abs($tva_tx);
 
 			$result=$discount->create($user);
+
 			if ($result < 0)
 			{
 				$error++;
@@ -1987,9 +1987,10 @@ if ($action == 'update_extras')
 }
 
 
+
 /*
  * View
-*/
+ */
 
 $form = new Form($db);
 $formother=new FormOther($db);
@@ -3696,8 +3697,8 @@ else if ($id > 0 || ! empty($ref))
 					}
 					else
 					{
-					print '<div class="inline-block divButAction"><a class="butAction" href="paiement.php?facid='.$object->id.'&amp;action=create">'.$langs->trans('DoPaymentBack').'</a></div>';
-				}
+						print '<div class="inline-block divButAction"><a class="butAction" href="paiement.php?facid='.$object->id.'&amp;action=create">'.$langs->trans('DoPaymentBack').'</a></div>';
+					}
 				}
 
 				// For credit note

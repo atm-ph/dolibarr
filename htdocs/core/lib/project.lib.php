@@ -268,8 +268,8 @@ function projectLinesa(&$inc, $parent, &$lines, &$level, $var, $showproject, &$t
 					{
 						// Note that having a user assigned to a task into a project user has no permission on, should not be possible
 						// because assignement on task can be done only on contact of project.
-						// If assignement was done and after, was removed from contact of project, then we can hide the line. 
-						$showline=0;	 
+						// If assignement was done and after, was removed from contact of project, then we can hide the line.
+						$showline=0;
 					}
 				}
 			}
@@ -500,7 +500,7 @@ function projectLinesb(&$inc, $parent, $lines, &$level, &$projectsrole, &$tasksr
 
 			// Time spent
 			print '<td align="right">';
-			if ($lines[$i]->duration) 
+			if ($lines[$i]->duration)
 			{
 				print '<a href="'.DOL_URL_ROOT.'/projet/tasks/time.php?id='.$lines[$i]->id.'">';
 				print convertSecondToTime($lines[$i]->duration,'allhourmin');

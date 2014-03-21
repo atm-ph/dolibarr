@@ -153,7 +153,7 @@ class pdf_einstein extends ModelePDFCommandes
 		$outputlangs->load("products");
 		$outputlangs->load("orders");
 		$outputlangs->load("deliveries");
-		
+
 		if ($conf->commande->dir_output)
 		{
             $object->fetch_thirdparty();
@@ -599,7 +599,7 @@ class pdf_einstein extends ModelePDFCommandes
             $pdf->SetFont('','B', $default_font_size - 2);
             $text=$outputlangs->transnoentities("DeliveryDate").':';
             $pdf->MultiCell(80, 3, $text, 0, 'L', 0);
-            
+
 			$pdf->SetFont('','', $default_font_size - 2);
 			$pdf->SetXY($posxval, $posy);
             $text=dol_print_date($object->date_livraison,'day','',$outputlangs);
