@@ -186,7 +186,7 @@ function restrictedArea($user, $features, $objectid=0, $dbtablename='', $feature
             && empty($user->rights->$feature->run)) $readok=0;
         }
     }
-
+    
     if (! $readok) accessforbidden();
     //print "Read access is ok";
 
@@ -440,9 +440,10 @@ function restrictedArea($user, $features, $objectid=0, $dbtablename='', $feature
                     $sql.= " AND s.entity IN (".getEntity($sharedelement, 1).")";
                     $sql.= " AND sc.fk_user = ".$user->id;
                 }
+                
                 // If multicompany and internal users with all permissions, check user is in correct entity
-                else if (! empty($conf->multicompany->enabled))
-                {
+                else if (! empty($conf->multicompany->enabled) && ($conf->entity!=1))
+                {   
                     $sql = "SELECT dbt.".$dbt_select;
                     $sql.= " FROM ".MAIN_DB_PREFIX.$dbtablename." as dbt";
                     $sql.= " WHERE dbt.".$dbt_select." = ".$objectid;
