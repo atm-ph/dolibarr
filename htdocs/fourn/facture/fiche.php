@@ -1115,7 +1115,7 @@ if ($action == 'create')
             $objectsrc = new $classname($db);
             $objectsrc->fetch(GETPOST('originid'));
             $objectsrc->fetch_thirdparty();
-
+            
             $projectid			= (!empty($objectsrc->fk_project)?$objectsrc->fk_project:'');
             //$ref_client			= (!empty($objectsrc->ref_client)?$object->ref_client:'');
 
@@ -1284,7 +1284,7 @@ if ($action == 'create')
 		$formproject=new FormProjets($db);
 
 		$langs->load('projects');
-		print '<tr><td>'.$langs->trans('Project').'</td><td colspan="2">';
+		print '<tr><td class="fieldrequired">'.$langs->trans('Project').'</td><td colspan="2">';
 		$formproject->select_projects(-1, $projectid, 'projectid');
 		print '</td></tr>';
 	}
