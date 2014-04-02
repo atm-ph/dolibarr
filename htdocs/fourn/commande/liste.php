@@ -175,7 +175,7 @@ if ($resql)
 		print $formfile->getDocumentsLink($objectstatic->element, $filename, $filedir);
 		
 		
-		//Display picot if invoice do not exists
+		//Display picto if invoice do not exists
 		$display_picto=true;
 		$objectstatic->fetch($obj->rowid);
 		$objectstatic->fetchObjectLinked();
@@ -186,6 +186,7 @@ if ($resql)
 			}
 		}
 		if ($display_picto) {
+			//TODO : Translation
 			print img_picto("Pas de Facture Fournisseur", 'warning');
 		}
 		
