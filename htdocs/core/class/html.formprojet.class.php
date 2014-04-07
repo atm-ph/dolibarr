@@ -125,7 +125,9 @@ class FormProjets
 							}
 							if ($socid > 0 && (! empty($obj->fk_soc) && $obj->fk_soc != $socid))
 							{
-								$disabled=1;
+								//FIXME : Hack for Quimper project in Draft can be selected
+								//$disabled=1;
+								$disabled=0;
 								$labeltoshow.=' - '.$langs->trans("LinkedToAnotherCompany");
 							}
 
