@@ -106,7 +106,10 @@ class FormProjets
 						$labeltoshow=dol_trunc($obj->ref,18);
 						//if ($obj->public) $labeltoshow.=' ('.$langs->trans("SharedProject").')';
 						//else $labeltoshow.=' ('.$langs->trans("Private").')';
-						if (!empty($selected) && $selected == $obj->rowid && $obj->fk_statut > 0)
+						
+						//FIXME : Hack for Quimper project in Draft can be selected
+						//if (!empty($selected) && $selected == $obj->rowid && $obj->fk_statut > 0)
+						if (!empty($selected) && $selected == $obj->rowid)
 						{
 							$out.= '<option value="'.$obj->rowid.'" selected="selected">'.$labeltoshow.' - '.dol_trunc($obj->title,$maxlength).'</option>';
 						}
@@ -115,12 +118,16 @@ class FormProjets
 							$disabled=0;
 							if (! $obj->fk_statut > 0)
 							{
+								//FIXME : Hack for Quimper project in Draft can be selected
+								//$disabled=1;
 								$disabled=0;
 								$labeltoshow.=' - '.$langs->trans("Draft");
 							}
 							if ($socid > 0 && (! empty($obj->fk_soc) && $obj->fk_soc != $socid))
 							{
-								$disabled=1;
+								//FIXME : Hack for Quimper project in Draft can be selected
+								//$disabled=1;
+								$disabled=0;
 								$labeltoshow.=' - '.$langs->trans("LinkedToAnotherCompany");
 							}
 
