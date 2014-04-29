@@ -1502,6 +1502,11 @@ function dolGetElementUrl($objectid,$objecttype,$withpicto=0,$option='')
 		$module='ficheinter';
 		$subelement='fichinter';
 	}
+	if ($objecttype == 'project_task') {
+		$classpath = 'projet/class';
+		$module='projet';
+		$subelement='task';
+	}
 
 	//print "objecttype=".$objecttype." module=".$module." subelement=".$subelement;
 
