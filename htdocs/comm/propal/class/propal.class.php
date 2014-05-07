@@ -945,6 +945,8 @@ class Propal extends CommonObject
         {
             $objsoc->fetch($this->socid);
         }
+        print $this->socid;
+        exit;
 
         $this->id=0;
         $this->statut=0;
