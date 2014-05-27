@@ -959,6 +959,7 @@ function top_htmlhead($head, $title='', $disablejs=0, $disablehead=0, $arrayofjs
         print '<meta name="robots" content="noindex,nofollow">'."\n";      // Evite indexation par robots
         print '<meta name="author" content="Dolibarr Development Team">'."\n";
         $favicon=dol_buildpath('/theme/'.$conf->theme.'/img/favicon.ico',1);
+		if (! empty($conf->global->MAIN_FAVICON_URL)) $favicon=$conf->global->MAIN_FAVICON_URL;
         print '<link rel="shortcut icon" type="image/x-icon" href="'.$favicon.'"/>'."\n";
         if (empty($conf->global->MAIN_OPTIMIZEFORTEXTBROWSER)) print '<link rel="top" title="'.$langs->trans("Home").'" href="'.(DOL_URL_ROOT?DOL_URL_ROOT:'/').'">'."\n";
         if (empty($conf->global->MAIN_OPTIMIZEFORTEXTBROWSER)) print '<link rel="copyright" title="GNU General Public License" href="http://www.gnu.org/copyleft/gpl.html#SEC1">'."\n";
@@ -1506,7 +1507,7 @@ function top_menu($head, $title='', $target='', $disablejs=0, $disablehead=0, $a
 	print '<div style="clear: both;"></div>';
     print "<!-- End top horizontal menu -->\n\n";
 
-    if (empty($conf->dol_hide_leftmenu) && (empty($conf->use_javascript_ajax) || ! empty($conf->dol_use_jmobile) || empty($conf->global->MAIN_MENU_USE_JQUERY_LAYOUT))) print '<div id="id-container">';
+    if (empty($conf->dol_hide_leftmenu) && empty($conf->dol_use_jmobile) && empty($conf->global->MAIN_MENU_USE_JQUERY_LAYOUT)) print '<div id="id-container">';
 }
 
 
@@ -1537,7 +1538,7 @@ function left_menu($menu_array_before, $helppagename='', $moresearchform='', $me
 	    $hookmanager->initHooks(array('searchform','leftblock'));
 
     	if (empty($conf->dol_use_jmobile) && ! empty($conf->use_javascript_ajax) && ! empty($conf->global->MAIN_MENU_USE_JQUERY_LAYOUT)) print "\n".'<div class="ui-layout-west"> <!-- Begin left layout -->'."\n";
-		else print '<div id="id-left">';
+		else print '<div id="id-left"> <!-- Begin id-left -->';
 
 	    print "\n";
 
@@ -1715,7 +1716,7 @@ function left_menu($menu_array_before, $helppagename='', $moresearchform='', $me
 	    print $leftblock;
 
 	    if (empty($conf->dol_use_jmobile) && ! empty($conf->use_javascript_ajax) && ! empty($conf->global->MAIN_MENU_USE_JQUERY_LAYOUT)) print '</div> <!-- End left layout -->'."\n";
-	    else print '</div>';	// End div id="id-left"
+	    else print '</div> <!-- end id-left -->';	// End div id="id-left"
     }
 
     print "\n";
@@ -1736,10 +1737,7 @@ function main_area($title='')
 {
     global $conf, $langs;
 
-    if (empty($conf->dol_use_jmobile) && ! empty($conf->use_javascript_ajax) && ! empty($conf->global->MAIN_MENU_USE_JQUERY_LAYOUT))
-    {
-        print '<div id="mainContent"><div class="ui-layout-center"> <!-- begin main layout -->'."\n";
-    }
+    if (empty($conf->dol_use_jmobile) && ! empty($conf->use_javascript_ajax) && ! empty($conf->global->MAIN_MENU_USE_JQUERY_LAYOUT)) print '<div id="mainContent"><div class="ui-layout-center"> <!-- begin main layout -->'."\n";
 	if (empty($conf->dol_hide_leftmenu)) print '<div id="id-right">';
 
     print "\n";
@@ -1864,18 +1862,18 @@ if (! function_exists("llxFooter"))
         }
 
         print "\n\n";
-        print '</div> <!-- end div class="fiche" -->'."\n";
+        print '</div> <!-- End div class="fiche" -->'."\n";
         if (! empty($conf->dol_use_jmobile)) print '</div>';	// end data-role="page"
 
         if (empty($conf->dol_use_jmobile) && ! empty($conf->use_javascript_ajax) && ! empty($conf->global->MAIN_MENU_USE_JQUERY_LAYOUT)) print '</div></div> <!-- end main layout -->'."\n";
-		if (empty($conf->dol_hide_leftmenu)) print '</div>'; // End div id-right
+		if (empty($conf->dol_hide_leftmenu)) print '</div> <!-- End div id-right -->'; // End div id-right
 
         print "\n";
         if ($comment) print '<!-- '.$comment.' -->'."\n";
 
         printCommonFooter($zone);
 
-        if (empty($conf->dol_hide_leftmenu)) print '</div>';	// End div container
+        if (empty($conf->dol_hide_leftmenu) && empty($conf->dol_use_jmobile) && empty($conf->global->MAIN_MENU_USE_JQUERY_LAYOUT)) print '</div> <!-- End div id-container -->'."\n";	// End div container
 
         print "</body>\n";
         print "</html>\n";

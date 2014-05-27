@@ -8,7 +8,7 @@
  * Copyright (C) 2010-2013 Juanjo Menent         <jmenent@2byte.es>
  * Copyright (C) 2010-2011 Philippe Grand        <philippe.grand@atoo-net.com>
  * Copyright (C) 2012-2013 Christophe Battarel   <christophe.battarel@altairis.fr>
- * Copyright (C) 2013      Florian Henry		 <florian.henry@open-concept.pro>
+ * Copyright (C) 2013-2014 Florian Henry		 <florian.henry@open-concept.pro>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1368,7 +1368,7 @@ if ($action == 'create')
 
 	// Date
 	print '<tr><td class="fieldrequired">'.$langs->trans('Date').'</td><td colspan="2">';
-	$form->select_date('','','','','',"addprop");
+	$form->select_date('','','','','',"addprop",1,1);
 	print '</td></tr>';
 
 	// Validaty duration
@@ -1407,8 +1407,7 @@ if ($action == 'create')
 	}
 	else
 	{
-		$datepropal=empty($conf->global->MAIN_AUTOFILL_DATE)?-1:0;
-		$form->select_date($datepropal,'liv_','','','',"addprop");
+		$form->select_date(-1,'liv_','','','',"addprop",1,1);
 	}
 	print '</td></tr>';
 
@@ -1462,7 +1461,7 @@ if ($action == 'create')
 		print '<input type="hidden" name="createmode" value="empty">';
 	}
 
-	print '<table>';
+	if (! empty($conf->global->PROPAL_CLONE_ON_CREATE_PAGE) || ! empty($conf->global->PRODUCT_SHOW_WHEN_CREATE)) print '<table>';
 	if (! empty($conf->global->PROPAL_CLONE_ON_CREATE_PAGE))
 	{
 		// For backward compatibility
@@ -1533,14 +1532,11 @@ if ($action == 'create')
 				print '<td><input type="text" size="2" name="remise'.$i.'" value="'.$soc->remise_percent.'">%</td>';
 				print '</tr>';
 			}
-
 			print "</table>";
-
 		}
 		print '</td></tr>';
 	}
-	print '</table>';
-	print '<br>';
+	if (! empty($conf->global->PROPAL_CLONE_ON_CREATE_PAGE) || ! empty($conf->global->PRODUCT_SHOW_WHEN_CREATE)) print '</table><br>';
 
 	$langs->load("bills");
 	print '<center>';
@@ -1681,28 +1677,22 @@ else
 	if ($soc->remise_percent) print $langs->trans("CompanyHasRelativeDiscount",$soc->remise_percent);
 	else print $langs->trans("CompanyHasNoRelativeDiscount");
 	print '. ';
-	$absolute_discount=$soc->getAvailableDiscounts('','fk_facture_source IS NULL');
-	$absolute_creditnote=$soc->getAvailableDiscounts('','fk_facture_source IS NOT NULL');
-	$absolute_discount=price2num($absolute_discount,'MT');
-	$absolute_creditnote=price2num($absolute_creditnote,'MT');
-	if ($absolute_discount)
-	{
-		if ($object->statut > 0)
-		 {
-			print $langs->trans("CompanyHasAbsoluteDiscount",price($absolute_discount),$langs->transnoentities("Currency".$conf->currency));
-
-		}
-		else
-		{
+	$absolute_discount = $soc->getAvailableDiscounts('', 'fk_facture_source IS NULL');
+	$absolute_creditnote = $soc->getAvailableDiscounts('', 'fk_facture_source IS NOT NULL');
+	$absolute_discount = price2num($absolute_discount, 'MT');
+	$absolute_creditnote = price2num($absolute_creditnote, 'MT');
+	if ($absolute_discount) {
+		if ($object->statut > 0) {
+			print $langs->trans("CompanyHasAbsoluteDiscount", price($absolute_discount, 0, $langs, 0, 0, -1, $conf->currency));
+		} else {
 			// Remise dispo de type non avoir
 			$filter='fk_facture_source IS NULL';
 			print '<br>';
 			$form->form_remise_dispo($_SERVER["PHP_SELF"].'?id='.$object->id,0,'remise_id',$soc->id,$absolute_discount,$filter);
 		}
 	}
-	if ($absolute_creditnote)
-	{
-		print $langs->trans("CompanyHasCreditNote",price($absolute_creditnote),$langs->transnoentities("Currency".$conf->currency)).'. ';
+	if ($absolute_creditnote) {
+		print $langs->trans("CompanyHasCreditNote", price($absolute_creditnote, 0, $langs, 0, 0, -1, $conf->currency)) . '. ';
 	}
 	if (! $absolute_discount && ! $absolute_creditnote) print $langs->trans("CompanyHasNoAbsoluteDiscount").'.';
 	print '</td></tr>';
