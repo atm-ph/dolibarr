@@ -51,6 +51,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
 
 $langs->load('bills');
 $langs->load('companies');
+$langs->load('compta');
 $langs->load('products');
 $langs->load('banks');
 $langs->load('main');
@@ -1139,7 +1140,9 @@ else if (($action == 'addline' || $action == 'addline_predef') && $user->rights-
 	$error = 0;
 
 	// Set if we used free entry or predefined product
-	if (GETPOST('addline_libre'))
+	if (GETPOST('addline_libre')
+			|| (GETPOST('dp_desc') && ! GETPOST('addline_libre') && ! GETPOST('idprod', 'int')>0)	// we push enter onto qty field
+	)
 	{
 		$predef='';
 		$idprod=0;
@@ -1147,7 +1150,9 @@ else if (($action == 'addline' || $action == 'addline_predef') && $user->rights-
 		$price_ht = GETPOST('price_ht');
 		$tva_tx=(GETPOST('tva_tx')?GETPOST('tva_tx'):0);
 	}
-	if (GETPOST('addline_predefined'))
+	if (GETPOST('addline_predefined')
+			|| (! GETPOST('dp_desc') && ! GETPOST('addline_predefined') && GETPOST('idprod', 'int')>0)	// we push enter onto qty field
+	)
 	{
 		$predef=(($conf->global->MAIN_FEATURES_LEVEL < 2) ? '_predef' : '');
 		$idprod=GETPOST('idprod', 'int');
@@ -1850,21 +1855,25 @@ else if ($action == 'builddoc')	// En get ou en post
 	if (GETPOST('model')) $object->setDocModel($user, GETPOST('model','alpha'));
 	if (GETPOST('fk_bank')) $object->fk_bank=GETPOST('fk_bank');
 
-	// Define output language
-	$outputlangs = $langs;
-	$newlang='';
-	if ($conf->global->MAIN_MULTILANGS && empty($newlang) && GETPOST('lang_id')) $newlang=GETPOST('lang_id');
-	if ($conf->global->MAIN_MULTILANGS && empty($newlang)) $newlang=$object->client->default_lang;
-	if (! empty($newlang))
+	// object->modelpdf can be empty when we are using odt template by default and builddoc is called by POS module (invoice was just created and no template ODT template was selected).
+	if (! empty($object->modelpdf))
 	{
-		$outputlangs = new Translate("",$conf);
-		$outputlangs->setDefaultLang($newlang);
-	}
-	$result=facture_pdf_create($db, $object, $object->modelpdf, $outputlangs, $hidedetails, $hidedesc, $hideref);
-	if ($result <= 0)
-	{
-		dol_print_error($db,$result);
-		exit;
+		// Define output language
+		$outputlangs = $langs;
+		$newlang='';
+		if ($conf->global->MAIN_MULTILANGS && empty($newlang) && GETPOST('lang_id')) $newlang=GETPOST('lang_id');
+		if ($conf->global->MAIN_MULTILANGS && empty($newlang)) $newlang=$object->client->default_lang;
+		if (! empty($newlang))
+		{
+			$outputlangs = new Translate("",$conf);
+			$outputlangs->setDefaultLang($newlang);
+		}
+		$result=facture_pdf_create($db, $object, $object->modelpdf, $outputlangs, $hidedetails, $hidedesc, $hideref);
+		if ($result <= 0)
+		{
+			dol_print_error($db,$result);
+			exit;
+		}
 	}
 }
 
@@ -2073,7 +2082,7 @@ if ($action == 'create')
 			$mode_reglement_id 	= (! empty($objectsrc->mode_reglement_id)?$objectsrc->mode_reglement_id:(! empty($soc->mode_reglement_id)?$soc->mode_reglement_id:0));
 			$remise_percent 	= (! empty($objectsrc->remise_percent)?$objectsrc->remise_percent:(! empty($soc->remise_percent)?$soc->remise_percent:0));
 			$remise_absolue 	= (! empty($objectsrc->remise_absolue)?$objectsrc->remise_absolue:(! empty($soc->remise_absolue)?$soc->remise_absolue:0));
-			$dateinvoice		= empty($conf->global->MAIN_AUTOFILL_DATE)?-1:0;
+			$dateinvoice		= empty($conf->global->MAIN_AUTOFILL_DATE)?-1:'';
 
 			//Replicate extrafields
 			$objectsrc->fetch_optionals($originid);
@@ -2086,7 +2095,7 @@ if ($action == 'create')
 		$mode_reglement_id 	= $soc->mode_reglement_id;
 		$remise_percent 	= $soc->remise_percent;
 		$remise_absolue 	= 0;
-		$dateinvoice		= empty($conf->global->MAIN_AUTOFILL_DATE)?-1:0;
+		$dateinvoice		= empty($conf->global->MAIN_AUTOFILL_DATE)?-1:'';
 	}
 	$absolute_discount=$soc->getAvailableDiscounts();
 
@@ -2622,7 +2631,7 @@ else if ($id > 0 || ! empty($ref))
 			//'text' => $langs->trans("ConfirmClone"),
 			//array('type' => 'checkbox', 'name' => 'clone_content',   'label' => $langs->trans("CloneMainAttributes"),   'value' => 1),
 			//array('type' => 'checkbox', 'name' => 'update_prices',   'label' => $langs->trans("PuttingPricesUpToDate"),   'value' => 1),
-			array('type' => 'other', 'name' => 'idwarehouse',   'label' => $label,   'value' => $formproduct->selectWarehouses(GETPOST('idwarehouse'),'idwarehouse','',1,0,0,$langs->trans("NoStockAction"))));
+			array('type' => 'other', 'name' => 'idwarehouse',   'label' => $label,   'value' => $formproduct->selectWarehouses(GETPOST('idwarehouse')?GETPOST('idwarehouse'):'ifone','idwarehouse','',1,0,0,$langs->trans("NoStockAction"))));
 			$formconfirm=$form->formconfirm($_SERVER['PHP_SELF'].'?facid='.$object->id,$langs->trans('DeleteBill'),$text,'confirm_delete',$formquestion,"yes",1);
 		}else {
 			$formconfirm=$form->formconfirm($_SERVER['PHP_SELF'].'?facid='.$object->id,$langs->trans('DeleteBill'),$text,'confirm_delete','','',1);
@@ -2683,7 +2692,7 @@ else if ($id > 0 || ! empty($ref))
 				$value = '<input type="hidden" id="idwarehouse" name="idwarehouse" value="' . key($warehouse_array) . '">';
 			} else {
 				$label = $object->type==2?$langs->trans("SelectWarehouseForStockIncrease"):$langs->trans("SelectWarehouseForStockDecrease");
-				$value = $formproduct->selectWarehouses(GETPOST('idwarehouse'),'idwarehouse','',1);
+				$value = $formproduct->selectWarehouses(GETPOST('idwarehouse')?GETPOST('idwarehouse'):'ifone','idwarehouse','',1);
 			}
 			$formquestion=array(
 			//'text' => $langs->trans("ConfirmClone"),
@@ -2726,7 +2735,7 @@ else if ($id > 0 || ! empty($ref))
 				$value = '<input type="hidden" id="idwarehouse" name="idwarehouse" value="' . key($warehouse_array) . '">';
 			} else {
 				$label=$object->type==2?$langs->trans("SelectWarehouseForStockDecrease"):$langs->trans("SelectWarehouseForStockIncrease");
-				$value = $formproduct->selectWarehouses(GETPOST('idwarehouse'),'idwarehouse','',1);
+				$value = $formproduct->selectWarehouses(GETPOST('idwarehouse')?GETPOST('idwarehouse'):'ifone','idwarehouse','',1);
 			}
 			$formquestion=array(
 			//'text' => $langs->trans("ConfirmClone"),

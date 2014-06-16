@@ -129,9 +129,9 @@ if ($action == 'add' && $user->rights->projet->creer)
         $db->begin();
 
         $object->ref             = GETPOST('ref','alpha');
-        $object->title           = GETPOST('title','alpha');
+        $object->title           = GETPOST('title'); // Do not use 'alpha' here, we want field as it is
         $object->socid           = GETPOST('socid','int');
-        $object->description     = GETPOST('description','alpha');
+        $object->description     = GETPOST('description'); // Do not use 'alpha' here, we want field as it is
         $object->public          = GETPOST('public','alpha');
         $object->datec=dol_now();
         $object->date_start=$date_start;
@@ -205,9 +205,9 @@ if ($action == 'update' && ! $_POST["cancel"] && $user->rights->projet->creer)
 		$old_start_date = $object->date_start;
 
         $object->ref          = GETPOST('ref','alpha');
-        $object->title        = GETPOST('title','alpha');
+        $object->title        = GETPOST('title'); // Do not use 'alpha' here, we want field as it is
         $object->socid        = GETPOST('socid','int');
-        $object->description  = GETPOST('description','alpha');
+        $object->description  = GETPOST('description');	// Do not use 'alpha' here, we want field as it is
         $object->public       = GETPOST('public','alpha');
         $object->date_start   = empty($_POST["project"])?'':$date_start;
         $object->date_end     = empty($_POST["projectend"])?'':$date_end;
@@ -536,7 +536,7 @@ else
         print '<td><input size="30" name="title" value="'.$object->title.'"></td></tr>';
 
         // Customer
-        print '<tr><td>'.$langs->trans("Thirdparty").'</td><td>';
+        print '<tr><td>'.$langs->trans("ThirdParty").'</td><td>';
         $text=$form->select_company($object->societe->id,'socid','',1,1);
         $texthelp=$langs->trans("IfNeedToUseOhterObjectKeepEmpty");
         print $form->textwithtooltip($text.' '.img_help(),$texthelp,1);
@@ -607,7 +607,7 @@ else
         print '<tr><td>'.$langs->trans("Label").'</td><td>'.$object->title.'</td></tr>';
 
         // Third party
-        print '<tr><td>'.$langs->trans("Thirdparty").'</td><td>';
+        print '<tr><td>'.$langs->trans("ThirdParty").'</td><td>';
         if ($object->societe->id > 0) print $object->societe->getNomUrl(1);
         else print'&nbsp;';
         print '</td></tr>';

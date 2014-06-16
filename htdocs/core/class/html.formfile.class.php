@@ -696,7 +696,7 @@ class FormFile
      * 	@param	 string	$modulepart			Value for modulepart used by download or viewimage wrapper
      * 	@param	 string	$param				Parameters on sort links (param must start with &, example &aaa=bbb&ccc=ddd)
      * 	@param	 int	$forcedownload		Force to open dialog box "Save As" when clicking on file
-     * 	@param	 string	$relativepath		Relative path of docs (autodefined if not provided)
+     * 	@param	 string	$relativepath		Relati	ve path of docs (autodefined if not provided)
      * 	@param	 int	$permtodelete		Permission to delete
      * 	@param	 int	$useinecm			Change output for use in ecm module
      * 	@param	 string	$textifempty		Text to show if filearray is empty ('NoFileFound' if not defined)

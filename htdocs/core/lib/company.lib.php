@@ -684,7 +684,7 @@ function show_contacts($conf,$langs,$db,$object,$backtopage='')
             print '<td>';
             print dol_print_email($obj->email,$obj->rowid,$object->id,'AC_EMAIL');
             print '</td>';
-			if (! empty($conf->skype->enabled))
+            if (! empty($conf->skype->enabled))
             {
                 print '<td>';
                 print dol_print_skype($obj->skype,$obj->rowid,$object->id,'AC_SKYPE');

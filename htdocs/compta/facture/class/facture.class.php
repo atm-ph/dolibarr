@@ -816,9 +816,7 @@ class Facture extends CommonInvoice
 		$sql.= ' FROM '.MAIN_DB_PREFIX.'facture as f';
 		$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'c_payment_term as c ON f.fk_cond_reglement = c.rowid';
 		$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'c_paiement as p ON f.fk_mode_reglement = p.id';
-		$sql.= ' WHERE 1';
-		if ($conf->entity!=1)
-			$sql.= ' AND f.entity = '.$conf->entity;
+		$sql.= ' WHERE f.entity = '.$conf->entity;
 		if ($rowid)   $sql.= " AND f.rowid=".$rowid;
 		if ($ref)     $sql.= " AND f.facnumber='".$this->db->escape($ref)."'";
 		if ($ref_ext) $sql.= " AND f.ref_ext='".$this->db->escape($ref_ext)."'";
@@ -1254,6 +1252,16 @@ class Facture extends CommonInvoice
 			}
 			// Fin appel triggers
 		}
+		
+		// Removed extrafields
+		if (! $error) {
+			$result=$this->deleteExtraFields();
+			if ($result < 0)
+			{
+				$error++;
+				dol_syslog(get_class($this)."::delete error deleteExtraFields ".$this->error, LOG_ERR);
+			}
+		}
 
 		if (! $error)
 		{
@@ -1473,6 +1481,7 @@ class Facture extends CommonInvoice
 			if ($close_note) $sql.= ", close_note='".$this->db->escape($close_note)."'";
 			$sql.= ' WHERE rowid = '.$this->id;
 
+			dol_syslog(get_class($this)."::set_paid sql=".$sql, LOG_DEBUG);
 			$resql = $this->db->query($sql);
 			if ($resql)
 			{
@@ -1488,8 +1497,7 @@ class Facture extends CommonInvoice
 			else
 			{
 				$error++;
-				$this->error=$this->db->error();
-				dol_print_error($this->db);
+				$this->error=$this->db->lasterror();
 			}
 
 			if (! $error)

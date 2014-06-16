@@ -117,7 +117,6 @@ create table llx_links
   objectid          INTEGER NOT NULL
 )ENGINE=innodb;
 
-
 ALTER TABLE llx_categorie_contact ADD PRIMARY KEY pk_categorie_contact (fk_categorie, fk_socpeople);
 ALTER TABLE llx_categorie_contact ADD INDEX idx_categorie_contact_fk_categorie (fk_categorie);
 ALTER TABLE llx_categorie_contact ADD INDEX idx_categorie_contact_fk_socpeople (fk_socpeople);
@@ -368,8 +367,3 @@ ALTER TABLE llx_adherent ADD skype VARCHAR(255) AFTER email;
 -- multi-rib
 ALTER TABLE llx_societe_rib ADD default_rib smallint NOT NULL DEFAULT 0 AFTER owner_address;
 UPDATE llx_societe_rib SET default_rib = 1;
-
--- Automatic events for tasks
-insert into llx_c_action_trigger (rowid,code,label,description,elementtype,rang) values (35,'TASK_CREATE','Task created','Executed when a project task is created','project',35);
-insert into llx_c_action_trigger (rowid,code,label,description,elementtype,rang) values (36,'TASK_MODIFY','Task modified','Executed when a project task is modified','project',36);
-insert into llx_c_action_trigger (rowid,code,label,description,elementtype,rang) values (37,'TASK_DELETE','Task deleted','Executed when a project task is deleted','project',37);

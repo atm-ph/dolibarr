@@ -114,7 +114,7 @@ print '</td></tr>';
 
 print '<tr><td>'.$langs->trans("Label").'</td><td>'.$project->title.'</td></tr>';
 
-print '<tr><td>'.$langs->trans("Company").'</td><td>';
+print '<tr><td>'.$langs->trans("ThirdParty").'</td><td>';
 if (! empty($project->societe->id)) print $project->societe->getNomUrl(1);
 else print '&nbsp;';
 print '</td></tr>';
@@ -214,7 +214,7 @@ foreach ($listofreferent as $key => $value)
 		print '<br>';
 
 		print_titre($langs->trans($title));
-		
+
 		$selectList=$formproject->select_element($tablename);
 		if ($selectList)
 		{
@@ -223,7 +223,7 @@ foreach ($listofreferent as $key => $value)
 			print '<input type="hidden" name="action" value="addelement">';
 			print '<table><tr><td>'.$langs->trans("SelectElement").'</td>';
 			print '<td>'.$selectList.'</td>';
-			print '<td><input type="submit" class="button" value="'.$langs->trans("AddElement").'"></td>';
+			print '<td><input type="submit" class="button" value="'.dol_escape_htmltag($langs->trans("AddElement")).'"></td>';
 			print '</tr></table>';
 			print '</form>';
 		}
