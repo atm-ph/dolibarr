@@ -129,7 +129,7 @@ elseif ($action == 'confirm_valid' && $confirm == 'yes' && $user->rights->fourni
     }
 
     // Check parameters
-    if (! empty($conf->global->STOCK_CALCULATE_ON_SUPPLIER_BILL) && $qualified_for_stock_change)
+    if (! empty($conf->stock->enabled) && ! empty($conf->global->STOCK_CALCULATE_ON_SUPPLIER_BILL) && $qualified_for_stock_change)
     {
         $langs->load("stocks");
         if (! $idwarehouse || $idwarehouse == -1)
@@ -179,6 +179,8 @@ elseif ($action == 'confirm_delete_line' && $confirm == 'yes' && $user->rights->
 	else
 	{
 		$mesg='<div class="error">'.$object->error.'</div>';
+		/* Fix bug 1485 : Reset action to avoid asking again confirmation on failure */
+		$action='';
 	}
 }
 
@@ -186,6 +188,10 @@ elseif ($action == 'confirm_paid' && $confirm == 'yes' && $user->rights->fournis
 {
     $object->fetch($id);
     $result=$object->set_paid($user);
+    if ($result<0)
+    {
+        setEventMessage($object->error,'errors');
+    }
 }
 
 // Set supplier ref
@@ -521,6 +527,10 @@ elseif ($action == 'update_line' && $user->rights->fournisseur->facture->creer)
         if ($result >= 0)
         {
             unset($_POST['label']);
+        }
+        else
+        {
+            setEventMessage($object->error,'errors');
         }
     }
 }
@@ -881,7 +891,7 @@ if ($action == 'send' && ! $_POST['addfile'] && ! $_POST['removedfile'] && ! $_P
                         $interface=new Interfaces($db);
                         $result=$interface->run_triggers('BILL_SUPPLIER_SENTBYMAIL',$object,$user,$langs,$conf);
                         if ($result < 0) {
-                            $error++; $this->errors=$interface->errors;
+                            $error++; $object->errors=$interface->errors;
                         }
                         // Fin appel triggers
 
@@ -1072,6 +1082,7 @@ if ($action == 'create')
     print_fiche_titre($langs->trans('NewBill'));
 
     dol_htmloutput_mesg($mesg);
+    dol_htmloutput_events();
 
     $societe='';
     if ($_GET['socid'])
@@ -1164,10 +1175,10 @@ if ($action == 'create')
     {
         print $form->select_company((empty($_GET['socid'])?'':$_GET['socid']),'socid','s.fournisseur = 1',1);
     }
-    print '</td>';
+    print '</td></tr>';
 
     // Ref supplier
-    print '<tr><td class="fieldrequired">'.$langs->trans('RefSupplier').'</td><td><input name="ref_supplier" value="'.(isset($_POST['ref_supplier'])?$_POST['ref_supplier']:$fac_ori->ref).'" type="text"></td>';
+    print '<tr><td class="fieldrequired">'.$langs->trans('RefSupplier').'</td><td><input name="ref_supplier" value="'.(isset($_POST['ref_supplier'])?$_POST['ref_supplier']:'').'" type="text"></td>';
     print '</tr>';
 
     print '<tr><td valign="top" class="fieldrequired">'.$langs->trans('Type').'</td><td colspan="2">';
@@ -1254,7 +1265,7 @@ if ($action == 'create')
     print '</td></tr>';
 
     // Label
-    print '<tr><td>'.$langs->trans('Label').'</td><td><input size="30" name="libelle" value="'.(isset($_POST['libelle'])?$_POST['libelle']:$fac_ori->libelle).'" type="text"></td></tr>';
+    print '<tr><td>'.$langs->trans('Label').'</td><td><input size="30" name="libelle" value="'.(isset($_POST['libelle'])?$_POST['libelle']:'').'" type="text"></td></tr>';
 
     // Date invoice
     print '<tr><td class="fieldrequired">'.$langs->trans('DateInvoice').'</td><td>';
@@ -1475,7 +1486,17 @@ else
             }*/
             $formquestion=array();
 
-            if (! empty($conf->global->STOCK_CALCULATE_ON_SUPPLIER_BILL) && $object->hasProductsOrServices(1))
+            $qualified_for_stock_change=0;
+		    if (empty($conf->global->STOCK_SUPPORTS_SERVICES))
+		    {
+		    	$qualified_for_stock_change=$object->hasProductsOrServices(2);
+		    }
+		    else
+		    {
+		    	$qualified_for_stock_change=$object->hasProductsOrServices(1);
+		    }
+
+            if (! empty($conf->stock->enabled) && ! empty($conf->global->STOCK_CALCULATE_ON_SUPPLIER_BILL) && $qualified_for_stock_change)
             {
                 $langs->load("stocks");
                 require_once DOL_DOCUMENT_ROOT.'/product/class/html.formproduct.class.php';
