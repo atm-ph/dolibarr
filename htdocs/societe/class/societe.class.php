@@ -1033,6 +1033,13 @@ class Societe extends CommonObject
 		{
             $this->db->begin();
 
+			// Appel des triggers
+			include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
+			$interface=new Interfaces($this->db);
+			$result=$interface->run_triggers('COMPANY_DELETE',$this,$user,$langs,$conf);
+			if ($result < 0) { $error++; $this->errors=$interface->errors; }
+			// Fin appel triggers
+
             require_once DOL_DOCUMENT_ROOT.'/categories/class/categorie.class.php';
             $static_cat = new Categorie($this->db);
             $toute_categs = array();
@@ -1135,16 +1142,6 @@ class Societe extends CommonObject
                     $this->error = $this->db->lasterror();
                     dol_syslog(get_class($this)."::delete error -4 ".$this->error, LOG_ERR);
                 }
-            }
-
-            if (! $error)
-            {
-                // Appel des triggers
-                include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
-                $interface=new Interfaces($this->db);
-                $result=$interface->run_triggers('COMPANY_DELETE',$this,$user,$langs,$conf);
-                if ($result < 0) { $error++; $this->errors=$interface->errors; }
-                // Fin appel triggers
             }
 
             if (! $error)
