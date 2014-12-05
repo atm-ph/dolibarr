@@ -930,7 +930,7 @@ else if ($action == 'add' && $user->rights->facture->creer)
 							$langs->trans('Deposit'),
 							$amountdeposit, //subprice
 							1, //quantity
-							$lines[$i]->tva_tx,
+							GETPOST('vatrate'),
 							0, //localtax1_tx
 							0, //localtax2_tx
 							0, //fk_product
@@ -2260,7 +2260,8 @@ if ($action == 'create')
 			$arraylist=array('amount'=>'FixAmount','variable'=>'VarAmount');
 			print $form->selectarray('typedeposit',$arraylist, GETPOST('typedeposit'), 0, 0, 0, '', 1);
 			print '</td>';
-			print '<td class="nowrap" style="padding-left: 5px">'.$langs->trans('Value').':<input type="text" name="valuedeposit" size="3" value="'.GETPOST('valuedeposit','int').'"/>';
+			print '<td class="nowrap" style="padding-left: 5px">'.$langs->trans('Value').':<input type="text" name="valuedeposit" size="3" value="'.GETPOST('valuedeposit','int').'"/></td>';
+			print '<td class="nowrap" style="padding-left: 5px">'.$langs->trans('VAT').':'.$form->load_tva('vatrate', -1);
 		}
 		print '</td></tr></table>';
 		print '</td></tr>'."\n";
