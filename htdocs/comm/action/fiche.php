@@ -59,7 +59,10 @@ $socid = GETPOST('socid','int');
 $id = GETPOST('id','int');
 if ($user->societe_id) $socid=$user->societe_id;
 $result = restrictedArea($user, 'agenda', $id, 'actioncomm&societe', 'myactions&allactions', 'fk_soc', 'id');
+
 if ($user->societe_id && $socid) $result = restrictedArea($user,'societe',$socid);
+
+
 
 $error=GETPOST("error");
 $mesg='';
@@ -71,6 +74,15 @@ $extrafields = new ExtraFields($db);
 
 // fetch optionals attributes and labels
 $extralabels=$extrafields->fetch_name_optionals_label($actioncomm->table_element);
+
+if ($id>0) {
+	$result=$actioncomm->fetch($id);
+	
+	if (!empty($actioncomm->fk_project)) {
+		$result = restrictedArea($user, 'projet', $actioncomm->fk_project);
+	}
+}
+
 
 //var_dump($_POST);
 
@@ -659,7 +671,7 @@ if ($id > 0)
 	$act = new ActionComm($db);
 	$result=$act->fetch($id);
 	$act->fetch_optionals($id,$extralabels);
-
+	
 	if ($result < 0)
 	{
 		dol_print_error($db,$act->error);
