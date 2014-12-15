@@ -27,6 +27,7 @@
 	<?php if (! empty($conf->global->MAIN_VIEW_LINE_NUMBER)) { ?>
 	<td align="center"><?php $coldisplay++; ?><?php echo ($i+1); ?></td>
 	<?php } ?>
+
 	<td><?php $coldisplay++; ?><div id="<?php echo $line->rowid; ?>"></div>
 	<?php if (($line->info_bits & 2) == 2) { ?>
 		<a href="<?php echo DOL_URL_ROOT.'/comm/remx.php?id='.$this->socid; ?>">
@@ -153,6 +154,13 @@
 		<?php echo img_delete(); ?>
 		</a>
 	</td>
+	
+	<td>	
+		<?php
+		$selected= array_search($line->id, $_POST['line_to_delete']) ? 'checked' : '';
+		?>
+		<input type="checkbox" name="line_to_delete[]" value="<?php echo $line->id; ?>" <?php echo $selected; ?>>
+	</td>
 
 	<?php if ($num > 1 && empty($conf->browser->phone)) { ?>
 	<td align="center" class="tdlineupdown"><?php $coldisplay++; ?>
@@ -171,7 +179,7 @@
     <td align="center"<?php echo (empty($conf->browser->phone)?' class="tdlineupdown"':''); ?>><?php $coldisplay++; ?></td>
 	<?php } ?>
 <?php } else { ?>
-	<td colspan="3"><?php $coldisplay=$coldisplay+3; ?></td>
+	<td colspan="4"><?php $coldisplay=$coldisplay+4; ?></td>
 <?php } ?>
 
 <?php

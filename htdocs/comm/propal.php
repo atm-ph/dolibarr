@@ -172,6 +172,45 @@ else if ($action == 'confirm_deleteline' && $confirm == 'yes' && $user->rights->
 	exit;
 }
 
+// Remove several lines
+else if ($action == 'confirm_delete_object_lines' && $confirm == 'yes' && $user->rights->propal->creer)
+{
+	$deleted=0;
+	if( is_array($_POST['line_to_delete']) && count($_POST['line_to_delete']) > 0) 
+	{
+		foreach ($_POST['line_to_delete'] as $key => $value)
+		{
+			$result = $object->deleteline($value);
+			if ($result > 0)
+			{
+				$deleted++;
+			}
+		}
+	}
+	
+	if($deleted) {
+		// Define output language
+		$outputlangs = $langs;
+		$newlang='';
+		if ($conf->global->MAIN_MULTILANGS && empty($newlang) && GETPOST('lang_id')) $newlang=GETPOST('lang_id');
+		if ($conf->global->MAIN_MULTILANGS && empty($newlang)) $newlang=$object->client->default_lang;
+		if (! empty($newlang))
+		{
+			$outputlangs = new Translate("",$conf);
+			$outputlangs->setDefaultLang($newlang);
+		}
+		if (empty($conf->global->MAIN_DISABLE_PDF_AUTOUPDATE))
+		{
+			$ret=$object->fetch($object->id);    // Reload to get new records
+			propale_pdf_create($db, $object, $object->modelpdf, $outputlangs, $hidedetails, $hidedesc, $hideref);
+		}
+
+		setEventMessage($langs->trans('ObjectLinesSuccessfullyDeleted',$deleted));
+		header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
+		exit;
+	}
+}
+
 // Validation
 else if ($action == 'confirm_validate' && $confirm == 'yes' && $user->rights->propal->valider)
 {
@@ -635,7 +674,7 @@ else if ($action == "setabsolutediscount" && $user->rights->propal->creer)
 }
 
 // Add line
-else if (($action == 'addline' || $action == 'addline_predef') && $user->rights->propal->creer)
+else if (($action == 'addline' || $action == 'addline_predef') && $user->rights->propal->creer && empty($_POST['btn_delete_object_lines']))
 {
 	// Set if we used free entry or predefined product
 	if (GETPOST('addline_libre')
@@ -1560,7 +1599,25 @@ else
 
 	$head = propal_prepare_head($object);
 	dol_fiche_head($head, 'comm', $langs->trans('Proposal'), 0, 'propal');
+	
+	if ($conf->use_javascript_ajax)
+	{
+		// This is to avoid submit form by pressing enter when no line selected. 
+		// Into HTML, only the fist input|button is used when user press enter key
+		// Without this trick, page already wants to delete line when pressing enter,
+		// or we want just add a new line
+		print "\n".'<script type="text/javascript" language="javascript">';
+		print 'jQuery(document).ready(function () {
+			
+			jQuery("#lines_delete_button").hide();
 
+			jQuery("input[name^=line_to_delete]").click( function () {
+				jQuery("#lines_delete_button").show();
+			});
+		})';
+		print '</script>'."\n";
+	}
+	
 	$formconfirm='';
 
 	// Clone confirmation
@@ -1594,6 +1651,23 @@ else
 	{
 		$formconfirm=$form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&lineid='.$lineid, $langs->trans('DeleteProductLine'), $langs->trans('ConfirmDeleteProductLine'), 'confirm_deleteline','',0,1);
 	}
+	
+	/*
+	* Confirmation de la suppression des lignes sélectionnées
+   */
+   if ($action == 'addline' && ! empty($_POST['btn_delete_object_lines']) )
+   {
+	   $formquestion=array();
+	   if( is_array($_POST['line_to_delete']) && count($_POST['line_to_delete']) > 0) 
+	   {
+		   foreach ($_POST['line_to_delete'] as $key => $value)
+		   {
+			   $formquestion[] = array('type' => 'hidden','name'=>'line_to_delete[]', 'value'=>$value);
+		   }
+	   }
+	   // TODO: ajax dialog doesn't work because an anchor is present into the url (#add)
+	   $formconfirm=$form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('DeleteObjectLines'), $langs->trans('ConfirmDeleteObjectLines'), 'confirm_delete_object_lines',$formquestion, 0, 0);
+   }
 
 	// Confirm validate proposal
 	else if ($action == 'validate')
@@ -2088,8 +2162,13 @@ else
 			$reshook=$hookmanager->executeHooks('formAddObjectLine',$parameters,$object,$action);    // Note that $action and $object may have been modified by hook
 		}
 	}
-
+	
 	print '</table>';
+	
+	if ($object->statut == 0 && $user->rights->propal->creer)
+	{
+		print '<div id="lines_delete_button" class="right"><br /><button type="submit" class="butActionDelete button" name="btn_delete_object_lines" value="1">Delete selected lines</button></div>';
+	}
 
 	print "</form>\n";
 

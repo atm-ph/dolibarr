@@ -667,6 +667,10 @@ OriginFileName=Original filename
 SetDemandReason=Set source
 ViewPrivateNote=View notes
 XMoreLines=%s line(s) hidden
+DeleteSelectedLines=Delete selected lines
+DeleteObjectLines=Delete lines?
+ConfirmDeleteObjectLines=Confirm delete selected lines
+ObjectLinesSuccessfullyDeleted=%s line(s) deleted
 
 # Week day
 Monday=Monday

@@ -42,7 +42,7 @@ if (! empty($conf->margin->enabled) && ! empty($object->element) && in_array($ob
 	<td align="right"><?php echo $langs->trans('Qty'); ?></td>
 	<td align="right"><?php echo $langs->trans('ReductionShort'); ?></td>
 	<?php
-	$colspan = 4;
+	$colspan = 5;
 	if (! empty($usemargins))
 	{
 		?>
@@ -118,7 +118,7 @@ else {
 	<td align="right"><input type="text" size="2" name="qty" class="flat" value="<?php echo (isset($_POST["qty"])?$_POST["qty"]:1); ?>"></td>
 	<td align="right" class="nowrap"><input type="text" size="1" class="flat" value="<?php echo (isset($_POST["remise_percent"])?$_POST["remise_percent"]:$buyer->remise_client); ?>" name="remise_percent"><span class="hideonsmartphone">%</span></td>
 	<?php
-	$colspan = 4;
+	$colspan = 5;
 	if (! empty($usemargins))
 	{
 		?>
@@ -180,8 +180,8 @@ else {
 <?php
 if (! empty($conf->service->enabled) && $dateSelector)
 {
-	if(! empty($conf->global->MAIN_VIEW_LINE_NUMBER)) $colspan = 10;
-	else $colspan = 9;
+	if(! empty($conf->global->MAIN_VIEW_LINE_NUMBER)) $colspan = 11;
+	else $colspan = 10;
 
 	if (! empty($usemargins))
 	{

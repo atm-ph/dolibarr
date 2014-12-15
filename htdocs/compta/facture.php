@@ -223,6 +223,47 @@ else if ($action == 'confirm_deleteline' && $confirm == 'yes' && $user->rights->
 	}
 }
 
+// Remove several lines
+else if ($action == 'confirm_delete_object_lines' && $confirm == 'yes' && $user->rights->facture->creer)
+{
+	$object->fetch($id);
+	$object->fetch_thirdparty();
+	
+	$deleted=0;
+	if( is_array($_POST['line_to_delete']) && count($_POST['line_to_delete']) > 0) 
+	{
+		foreach ($_POST['line_to_delete'] as $key => $value)
+		{
+			$result = $object->deleteline($value,$user);
+			if ($result > 0)
+			{
+				$deleted++;
+			}
+		}
+	}
+	
+	if($deleted) {
+		// Define output language
+		$outputlangs = $langs;
+		$newlang='';
+		if ($conf->global->MAIN_MULTILANGS && empty($newlang) && GETPOST('lang_id')) $newlang=GETPOST('lang_id');
+		if ($conf->global->MAIN_MULTILANGS && empty($newlang)) $newlang=$object->client->default_lang;
+		if (! empty($newlang))
+		{
+			$outputlangs = new Translate("",$conf);
+			$outputlangs->setDefaultLang($newlang);
+		}
+		if (empty($conf->global->MAIN_DISABLE_PDF_AUTOUPDATE))
+		{
+			$ret=$object->fetch($object->id);    // Reload to get new records
+			facture_pdf_create($db, $object, $object->modelpdf, $outputlangs, $hidedetails, $hidedesc, $hideref);
+		}
+
+		setEventMessage($langs->trans('ObjectLinesSuccessfullyDeleted',$deleted));
+		header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
+		exit;
+	}
+}
 // Delete link of credit note to invoice
 else if ($action == 'unlinkdiscount' && $user->rights->facture->creer)
 {
@@ -1129,7 +1170,7 @@ else if ($action == 'add' && $user->rights->facture->creer)
 }
 
 // Add a new line
-else if (($action == 'addline' || $action == 'addline_predef') && $user->rights->facture->creer)
+else if (($action == 'addline' || $action == 'addline_predef') && $user->rights->facture->creer && empty($_POST['btn_delete_object_lines']))
 {
 	$langs->load('errors');
 	$error = 0;
@@ -2593,6 +2634,25 @@ else if ($id > 0 || ! empty($ref))
 	$head = facture_prepare_head($object);
 
 	dol_fiche_head($head, 'compta', $langs->trans('InvoiceCustomer'), 0, 'bill');
+	
+	if ($conf->use_javascript_ajax)
+	{
+		// This is to avoid submit form by pressing enter when no line selected. 
+		// Into HTML, only the fist input|button is used when user press enter key
+		// Without this trick, page already wants to delete line when pressing enter,
+		// or we want just add a new line
+		print "\n".'<script type="text/javascript" language="javascript">';
+		print 'jQuery(document).ready(function () {
+			
+			jQuery("#lines_delete_button").hide();
+
+			jQuery("input[name^=line_to_delete]").click( function () {
+				jQuery("#lines_delete_button").show();
+			});
+		})';
+		print '</script>'."\n";
+	}
+
 
 	$formconfirm='';
 
@@ -2825,6 +2885,23 @@ else if ($id > 0 || ! empty($ref))
 	if ($action == 'ask_deleteline')
 	{
 		$formconfirm=$form->formconfirm($_SERVER["PHP_SELF"].'?facid='.$object->id.'&lineid='.$lineid, $langs->trans('DeleteProductLine'), $langs->trans('ConfirmDeleteProductLine'), 'confirm_deleteline', '', 'no', 1);
+	}
+	
+	/*
+	* Confirmation de la suppression des lignes sélectionnées
+	*/
+	if ($action == 'addline' && ! empty($_POST['btn_delete_object_lines']) )
+	{
+	   $formquestion=array();
+	   if( is_array($_POST['line_to_delete']) && count($_POST['line_to_delete']) > 0) 
+	   {
+		   foreach ($_POST['line_to_delete'] as $key => $value)
+		   {
+			   $formquestion[] = array('type' => 'hidden','name'=>'line_to_delete[]', 'value'=>$value);
+		   }
+	   }
+	   // TODO: ajax dialog doesn't work because an anchor is present into the url (#add)
+	   $formconfirm=$form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('DeleteObjectLines'), $langs->trans('ConfirmDeleteObjectLines'), 'confirm_delete_object_lines',$formquestion, 0, 0);
 	}
 
 	// Clone confirmation
@@ -3567,6 +3644,11 @@ else if ($id > 0 || ! empty($ref))
 	}
 
 	print "</table>\n";
+	
+	if ($object->statut == 0 && $user->rights->facture->creer)
+	{
+		print '<div id="lines_delete_button" class="right"><br /><button type="submit" class="butActionDelete button" name="btn_delete_object_lines" value="1">' . $langs->trans('DeleteSelectedLines') . '</button></div>';
+	}
 
 	print "</form>\n";
 
