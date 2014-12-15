@@ -2744,7 +2744,7 @@ abstract class CommonObject
 		print '<tr class="liste_titre nodrag nodrop">';
 
 		if (! empty($conf->global->MAIN_VIEW_LINE_NUMBER)) print '<td align="center" width="5">&nbsp;</td>';
-
+		
 		// Description
 		print '<td>'.$langs->trans('Description').'</td>';
 
@@ -2780,6 +2780,8 @@ abstract class CommonObject
 
 		print '<td width="10"></td>';
 
+		print '<td width="10"></td>';
+		
 		print '<td width="10"></td>';
 
 		print '<td class="nowrap"></td>'; // No width to allow autodim
