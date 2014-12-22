@@ -2900,7 +2900,7 @@ else if ($id > 0 || ! empty($ref))
 			   $formquestion[] = array('type' => 'hidden','name'=>'line_to_delete[]', 'value'=>$value);
 		   }
 	   }
-	   // TODO: ajax dialog doesn't work because an anchor is present into the url (#add)
+	   // TODO: ajax dialog doesn't work because line_to_delete[] can't be find by jquery selector $("#line_to_delete[]") in dialog confirm
 	   $formconfirm=$form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('DeleteObjectLines'), $langs->trans('ConfirmDeleteObjectLines'), 'confirm_delete_object_lines',$formquestion, 0, 0);
 	}
 
