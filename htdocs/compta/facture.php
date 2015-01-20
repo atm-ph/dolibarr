@@ -3100,7 +3100,7 @@ else if ($id > 0 || ! empty($ref))
 	if ($absolute_creditnote > 0)
 	{
 		// If validated, we show link "add credit note to payment"
-		if ($object->statut != 1 || $object->type == 2 || $object->type == 3)
+		if ($object->statut != 1 || $object->type == 2)
 		{
 			if ($object->statut == 0 && $object->type != 3)
 			{
