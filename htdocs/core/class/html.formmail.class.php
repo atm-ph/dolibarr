@@ -217,7 +217,9 @@ class FormMail
      */
     function get_form($addfileaction='addfile',$removefileaction='removefile')
     {
-        global $conf, $langs, $user, $hookmanager;
+        global $conf, $langs, $user, $hookmanager, $form;
+
+        if (! is_object($form)) $form=new Form($this->db);
 
         $langs->load("other");
         $langs->load("mails");
@@ -246,10 +248,23 @@ class FormMail
         	if (! empty($_SESSION["listofnames"])) $listofnames=explode(';',$_SESSION["listofnames"]);
         	if (! empty($_SESSION["listofmimes"])) $listofmimes=explode(';',$_SESSION["listofmimes"]);
 
-        	$form=new Form($this->db);
+       		// Define output language
+			$outputlangs = $langs;
+			$newlang = '';
+			if ($conf->global->MAIN_MULTILANGS && empty($newlang))	$newlang = $this->param['langsmodels'];
+			if (! empty($newlang))
+			{
+				$outputlangs = new Translate("", $conf);
+				$outputlangs->setDefaultLang($newlang);
+				$outputlangs->load('other');
+			}
+
+        	// Get message template
+        	$arraydefaultmessage=$this->getEMailTemplate($this->db, $this->param["models"], $user, $outputlangs);
+
 
         	$out.= "\n<!-- Debut form mail -->\n";
-        	if ($this->withform)
+        	if ($this->withform == 1)
         	{
         		$out.= '<form method="POST" name="mailform" enctype="multipart/form-data" action="'.$this->param["returnurl"].'">'."\n";
         		$out.= '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'" />';
@@ -481,19 +496,23 @@ class FormMail
         	// Topic
         	if (! empty($this->withtopic))
         	{
-        		$this->withtopic=make_substitutions($this->withtopic,$this->substit);
+        		$defaulttopic="";
+        		if (count($arraydefaultmessage) > 0 && $arraydefaultmessage['topic']) $defaulttopic=$arraydefaultmessage['topic'];
+        		elseif (! is_numeric($this->withtopic))	 $defaulttopic=$this->withtopic;
+
+        		$defaulttopic=make_substitutions($defaulttopic,$this->substit);
 
         		$out.= '<tr>';
         		$out.= '<td width="180">'.$langs->trans("MailTopic").'</td>';
         		$out.= '<td>';
         		if ($this->withtopicreadonly)
         		{
-        			$out.= $this->withtopic;
-        			$out.= '<input type="hidden" size="60" id="subject" name="subject" value="'.$this->withtopic.'" />';
+        			$out.= $defaulttopic;
+        			$out.= '<input type="hidden" size="60" id="subject" name="subject" value="'.$defaulttopic.'" />';
         		}
         		else
         		{
-        			$out.= '<input type="text" size="60" id="subject" name="subject" value="'. (isset($_POST["subject"])?$_POST["subject"]:(is_numeric($this->withtopic)?'':$this->withtopic)) .'" />';
+        			$out.= '<input type="text" size="60" id="subject" name="subject" value="'. (isset($_POST["subject"])?$_POST["subject"]:($defaulttopic?$defaulttopic:'')) .'" />';
         		}
         		$out.= "</td></tr>\n";
         	}
@@ -504,38 +523,45 @@ class FormMail
         		$out.= '<tr>';
         		$out.= '<td width="180">'.$langs->trans("MailFile").'</td>';
         		$out.= '<td>';
-        		// TODO Trick to have param removedfile containing nb of image to delete. But this does not works without javascript
-        		$out.= '<input type="hidden" class="removedfilehidden" name="removedfile" value="">'."\n";
-        		$out.= '<script type="text/javascript" language="javascript">';
-        		$out.= 'jQuery(document).ready(function () {';
-        		$out.= '    jQuery(".removedfile").click(function() {';
-        		$out.= '        jQuery(".removedfilehidden").val(jQuery(this).val());';
-        		$out.= '    });';
-        		$out.= '})';
-        		$out.= '</script>'."\n";
-        		if (count($listofpaths))
+        		if (is_numeric($this->withfile))
         		{
-        			foreach($listofpaths as $key => $val)
-        			{
-        				$out.= '<div id="attachfile_'.$key.'">';
-        				$out.= img_mime($listofnames[$key]).' '.$listofnames[$key];
-        				if (! $this->withfilereadonly)
-        				{
-        					$out.= ' <input type="image" style="border: 0px;" src="'.DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/delete.png" value="'.($key+1).'" class="removedfile" id="removedfile_'.$key.'" name="removedfile_'.$key.'" />';
-        					//$out.= ' <a href="'.$_SERVER["PHP_SELF"].'?removedfile='.($key+1).' id="removedfile_'.$key.'">'.img_delete($langs->trans("Delete").'</a>';
-        				}
-        				$out.= '<br></div>';
-        			}
+	        		// TODO Trick to have param removedfile containing nb of image to delete. But this does not works without javascript
+	        		$out.= '<input type="hidden" class="removedfilehidden" name="removedfile" value="">'."\n";
+	        		$out.= '<script type="text/javascript" language="javascript">';
+	        		$out.= 'jQuery(document).ready(function () {';
+	        		$out.= '    jQuery(".removedfile").click(function() {';
+	        		$out.= '        jQuery(".removedfilehidden").val(jQuery(this).val());';
+	        		$out.= '    });';
+	        		$out.= '})';
+	        		$out.= '</script>'."\n";
+	        		if (count($listofpaths))
+	        		{
+	        			foreach($listofpaths as $key => $val)
+	        			{
+	        				$out.= '<div id="attachfile_'.$key.'">';
+	        				$out.= img_mime($listofnames[$key]).' '.$listofnames[$key];
+	        				if (! $this->withfilereadonly)
+	        				{
+	        					$out.= ' <input type="image" style="border: 0px;" src="'.DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/delete.png" value="'.($key+1).'" class="removedfile" id="removedfile_'.$key.'" name="removedfile_'.$key.'" />';
+	        					//$out.= ' <a href="'.$_SERVER["PHP_SELF"].'?removedfile='.($key+1).' id="removedfile_'.$key.'">'.img_delete($langs->trans("Delete").'</a>';
+	        				}
+	        				$out.= '<br></div>';
+	        			}
+	        		}
+	        		else
+	        		{
+	        			$out.= $langs->trans("NoAttachedFiles").'<br>';
+	        		}
+	        		if ($this->withfile == 2)	// Can add other files
+	        		{
+	        			$out.= '<input type="file" class="flat" id="addedfile" name="addedfile" value="'.$langs->trans("Upload").'" />';
+	        			$out.= ' ';
+	        			$out.= '<input type="submit" class="button" id="'.$addfileaction.'" name="'.$addfileaction.'" value="'.$langs->trans("MailingAddFile").'" />';
+	        		}
         		}
         		else
         		{
-        			$out.= $langs->trans("NoAttachedFiles").'<br>';
-        		}
-        		if ($this->withfile == 2)	// Can add other files
-        		{
-        			$out.= '<input type="file" class="flat" id="addedfile" name="addedfile" value="'.$langs->trans("Upload").'" />';
-        			$out.= ' ';
-        			$out.= '<input type="submit" class="button" id="'.$addfileaction.'" name="'.$addfileaction.'" value="'.$langs->trans("MailingAddFile").'" />';
+        			$out.=$this->withfile;
         		}
         		$out.= "</td></tr>\n";
         	}
@@ -544,18 +570,8 @@ class FormMail
         	if (! empty($this->withbody))
         	{
         		$defaultmessage="";
-
-        		// TODO    A partir du type, proposer liste de messages dans table llx_models
-        		if     ($this->param["models"]=='facture_send')	            { $defaultmessage=$langs->transnoentities("PredefinedMailContentSendInvoice"); }
-        		elseif ($this->param["models"]=='facture_relance')			{ $defaultmessage=$langs->transnoentities("PredefinedMailContentSendInvoiceReminder"); }
-        		elseif ($this->param["models"]=='propal_send')				{ $defaultmessage=$langs->transnoentities("PredefinedMailContentSendProposal"); }
-        		elseif ($this->param["models"]=='order_send')				{ $defaultmessage=$langs->transnoentities("PredefinedMailContentSendOrder"); }
-        		elseif ($this->param["models"]=='order_supplier_send')		{ $defaultmessage=$langs->transnoentities("PredefinedMailContentSendSupplierOrder"); }
-        		elseif ($this->param["models"]=='invoice_supplier_send')	{ $defaultmessage=$langs->transnoentities("PredefinedMailContentSendSupplierInvoice"); }
-        		elseif ($this->param["models"]=='shipping_send')			{ $defaultmessage=$langs->transnoentities("PredefinedMailContentSendShipping"); }
-        		elseif ($this->param["models"]=='fichinter_send')			{ $defaultmessage=$langs->transnoentities("PredefinedMailContentSendFichInter"); }
-        	    elseif ($this->param["models"]=='thirdparty')				{ $defaultmessage=$langs->transnoentities("PredefinedMailContentThirdparty"); }
-        		elseif (! is_numeric($this->withbody))						{ $defaultmessage=$this->withbody; }
+        		if (count($arraydefaultmessage) > 0 && $arraydefaultmessage['content']) $defaultmessage=$arraydefaultmessage['content'];
+        		elseif (! is_numeric($this->withbody))	$defaultmessage=$this->withbody;
 
         		// Complete substitution array
         		if (! empty($conf->paypal->enabled) && ! empty($conf->global->PAYPAL_ADD_PAYMENT_URL))
@@ -585,8 +601,15 @@ class FormMail
 					$defaultmessage = dol_nl2br($defaultmessage);
 				}
 
-        		$defaultmessage=make_substitutions($defaultmessage,$this->substit);
+
         		if (isset($_POST["message"])) $defaultmessage=$_POST["message"];
+				else
+				{
+					$defaultmessage=make_substitutions($defaultmessage,$this->substit);
+					// Clean first \n and br (to avoid empty line when CONTACTCIVNAME is empty)
+					$defaultmessage=preg_replace("/^(<br>)+/","",$defaultmessage);
+					$defaultmessage=preg_replace("/^\n+/","",$defaultmessage);
+				}
 
         		$out.= '<tr>';
         		$out.= '<td width="180" valign="top">'.$langs->trans("MailText").'</td>';
@@ -602,18 +625,21 @@ class FormMail
 
         			// Editor wysiwyg
         			require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
-        			if (!empty($conf->global->FCKEDITOR_ENABLE_MAIL)) {
-        				$this->withfckeditor=1;
+        			if ($this->withfckeditor == -1)
+        			{
+        				if (! empty($conf->global->FCKEDITOR_ENABLE_MAIL)) $this->withfckeditor=1;
+						else $this->withfckeditor=0;
         			}
+
         			$doleditor=new DolEditor('message',$defaultmessage,'',280,$this->ckeditortoolbar,'In',true,true,$this->withfckeditor,8,72);
         			$out.= $doleditor->Create(1);
         		}
         		$out.= "</td></tr>\n";
         	}
 
-        	if (! empty($this->withform))
+        	if ($this->withform == 1 || $this->withform == -1)
         	{
-        		$out.= '<tr><td align="center" colspan="2"><center>';
+        		$out.= '<tr><td align="center" colspan="2"><div class="center">';
         		$out.= '<input class="button" type="submit" id="sendmail" name="sendmail" value="'.$langs->trans("SendMail").'"';
         		// Add a javascript test to avoid to forget to submit file before sending email
         		if ($this->withfile == 2 && $conf->use_javascript_ajax)
@@ -626,17 +652,82 @@ class FormMail
         			$out.= ' &nbsp; &nbsp; ';
         			$out.= '<input class="button" type="submit" id="cancel" name="cancel" value="'.$langs->trans("Cancel").'" />';
         		}
-        		$out.= '</center></td></tr>'."\n";
+        		$out.= '</div></td></tr>'."\n";
         	}
 
         	$out.= '</table>'."\n";
 
-        	if (! empty($this->withform)) $out.= '</form>'."\n";
+        	if ($this->withform == 1) $out.= '</form>'."\n";
         	$out.= "<!-- Fin form mail -->\n";
 
         	return $out;
         }
     }
+
+
+
+	/**
+	 *      Return template of email
+	 *      Search into table c_email_templates
+	 *
+	 * 		@param	DoliDB		$db				Database handler
+	 * 		@param	string		$type_template	Get message for key module
+	 *      @param	string		$user			Use template public or limited to this user
+	 *      @param	Translate	$outputlangs	Output lang object
+	 *      @return array						array('topic'=>,'content'=>,..)
+	 */
+	private function getEMailTemplate($db, $type_template, $user, $outputlangs)
+	{
+		$ret=array();
+
+		$sql = "SELECT label, topic, content, lang";
+		$sql.= " FROM ".MAIN_DB_PREFIX.'c_email_templates';
+		$sql.= " WHERE type_template='".$db->escape($type_template)."'";
+		$sql.= " AND entity IN (".getEntity("c_email_templates").")";
+		$sql.= " AND (fk_user is NULL or fk_user = 0 or fk_user = ".$user->id.")";
+		if (is_object($outputlangs)) $sql.= " AND (lang = '".$outputlangs->defaultlang."' OR lang IS NULL OR lang = '')";
+		$sql.= $db->order("lang,label","ASC");
+		//print $sql;
+
+		$resql = $db->query($sql);
+		if ($resql)
+		{
+			$obj = $db->fetch_object($resql);	// Get first found
+			if ($obj)
+			{
+				$ret['label']=$obj->label;
+				$ret['topic']=$obj->topic;
+				$ret['content']=$obj->content;
+				$ret['lang']=$obj->lang;
+			}
+			else
+			{
+				$defaultmessage='';
+				if     ($type_template=='facture_send')	            { $defaultmessage=$outputlangs->transnoentities("PredefinedMailContentSendInvoice"); }
+	        	elseif ($type_template=='facture_relance')			{ $defaultmessage=$outputlangs->transnoentities("PredefinedMailContentSendInvoiceReminder"); }
+	        	elseif ($type_template=='propal_send')				{ $defaultmessage=$outputlangs->transnoentities("PredefinedMailContentSendProposal"); }
+	        	elseif ($type_template=='order_send')				{ $defaultmessage=$outputlangs->transnoentities("PredefinedMailContentSendOrder"); }
+	        	elseif ($type_template=='order_supplier_send')		{ $defaultmessage=$outputlangs->transnoentities("PredefinedMailContentSendSupplierOrder"); }
+	        	elseif ($type_template=='invoice_supplier_send')	{ $defaultmessage=$outputlangs->transnoentities("PredefinedMailContentSendSupplierInvoice"); }
+	        	elseif ($type_template=='shipping_send')			{ $defaultmessage=$outputlangs->transnoentities("PredefinedMailContentSendShipping"); }
+	        	elseif ($type_template=='fichinter_send')			{ $defaultmessage=$outputlangs->transnoentities("PredefinedMailContentSendFichInter"); }
+	        	elseif ($type_template=='thirdparty')				{ $defaultmessage=$outputlangs->transnoentities("PredefinedMailContentThirdparty"); }
+
+	        	$ret['label']='default';
+	        	$ret['topic']='';
+	        	$ret['content']=$defaultmessage;
+	        	$ret['lang']=$outputlangs->defaultlang;
+			}
+
+			$db->free($resql);
+			return $ret;
+		}
+		else
+		{
+			dol_print_error($db);
+			return -1;
+		}
+	}
 }
 
-?>
+    
