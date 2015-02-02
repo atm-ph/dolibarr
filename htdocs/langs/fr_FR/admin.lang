@@ -749,6 +749,7 @@ DictionnaryOrderMethods=Méthodes de commandes
 DictionnarySource=Origines des propales/commandes
 DictionnaryAccountancyplan=Plan comptable
 DictionnaryAccountancysystem=Modèles de plan comptable
+DictionaryEMailTemplates=Modèles des courriels
 SetupSaved=Configuration sauvegardée
 BackToModuleList=Retour liste des modules
 BackToDictionnaryList=Retour liste des dictionnaires
