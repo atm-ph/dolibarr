@@ -285,8 +285,31 @@ foreach ($listofreferent as $key => $value)
 
 				print '</tr>';
 
-				$total_ht = $total_ht + $element->total_ht;
-				$total_ttc = $total_ttc + $element->total_ttc;
+				//If deposit invoice to not sum deposit and invoice as well
+				$do_not_sum=false;
+				if ($key=='invoice' && $element->type==3) {
+					//find if total invoice exists
+					$sql_deposit = 'SELECT rmx.rowid ';
+					$sql_deposit .= ' FROM '.MAIN_DB_PREFIX.'societe_remise_except as rmx';
+					$sql_deposit .= ' INNER JOIN '.MAIN_DB_PREFIX.'facture as fact ON fact.rowid=rmx.fk_facture AND fact.fk_projet='.$project->id.' AND rmx.fk_facture_source='.$element->id;
+					dol_syslog(__FILE__.':: deposit invoices $sql_deposit=' . $sql_deposit);
+					$result_deposit=$db->query($sql_deposit);
+					if (!$result_deposit) {
+						setEventMessage($db->lasterror,'errors');
+					} else {
+						$obj_deposit=$db->fetch_object($result_deposit);
+						if (!empty($obj_deposit->rowid)) {
+							$do_not_sum=true;
+						} else {
+							$do_not_sum=false;
+						}
+					}
+					
+				}
+				if ($do_not_sum==false) {
+					$total_ht = $total_ht + $element->total_ht;
+					$total_ttc = $total_ttc + $element->total_ttc;
+				}
 			}
 
 			print '<tr class="liste_total"><td colspan="3">'.$langs->trans("Number").': '.$i.'</td>';
