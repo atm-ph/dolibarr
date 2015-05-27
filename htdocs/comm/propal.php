@@ -2268,7 +2268,7 @@ else
 			}
 
 			// Create an invoice and classify billed
-			if ($object->statut == 2 && $user->societe_id == 0)
+			/*if ($object->statut == 2 && $user->societe_id == 0)
 			{
 				if (! empty($conf->facture->enabled) && $user->rights->facture->creer)
 				{
@@ -2280,7 +2280,7 @@ else
 				{
 					print '<div class="inline-block divButAction"><a class="butAction" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&amp;action=classifybilled&amp;socid='.$object->socid.'">'.$langs->trans("ClassifyBilled").'</a></div>';
 				}
-			}
+			}*/
 
 			// Close
 			if ($object->statut == 1 && $user->rights->propal->cloturer)
