@@ -293,6 +293,11 @@ TotalOfTwoDiscountMustEqualsOriginal=La somme du montant des 2 nouvelles réduct
 ConfirmRemoveDiscount=Êtes-vous sûr de vouloir supprimer cette réduction ?
 RelatedBill=Facture associée
 RelatedBills=Factures associées
+RelatedCustomerInvoices=Factures clients liées
+RelatedSupplierInvoices=Factures fournisseurs liées
+LatestRelatedBill=Dernière facture en rapport
+WarningBillExist=Attention, une ou plusieurs factures existent déjà
+MergingPDFTool=Outil de fusion de PDF
 
 # PaymentConditions
 PaymentConditionShortRECEP=A réception

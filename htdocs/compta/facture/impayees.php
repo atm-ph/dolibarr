@@ -121,12 +121,12 @@ if ($action == "builddoc" && $user->rights->facture->lire && ! GETPOST('button_s
 		}
 		else
 		{
-			$mesg='<div class="error">'.$langs->trans('NoPDFAvailableForChecked').'</div>';
+			setEventMessage($langs->trans('NoPDFAvailableForChecked'),'errors');
 		}
 	}
 	else
 	{
-		$mesg='<div class="error">'.$langs->trans('InvoiceNotChecked').'</div>' ;
+		setEventMessage($langs->trans('InvoiceNotChecked'), 'warnings');
 	}
 }
 

@@ -1485,23 +1485,23 @@ class Societe extends CommonObject
 
         if ($option == 'customer' || $option == 'compta')
         {
-           $lien = '<a href="'.DOL_URL_ROOT.'/comm/fiche.php?socid='.$this->id;
+           $lien = '<a target="_blank" href="'.DOL_URL_ROOT.'/comm/fiche.php?socid='.$this->id;
         }
         else if ($option == 'prospect' && empty($conf->global->SOCIETE_DISABLE_PROSPECTS))
         {
-            $lien = '<a href="'.DOL_URL_ROOT.'/comm/fiche.php?socid='.$this->id;
+            $lien = '<a target="_blank" href="'.DOL_URL_ROOT.'/comm/fiche.php?socid='.$this->id;
         }
         else if ($option == 'supplier')
         {
-            $lien = '<a href="'.DOL_URL_ROOT.'/fourn/fiche.php?socid='.$this->id;
+            $lien = '<a target="_blank" href="'.DOL_URL_ROOT.'/fourn/fiche.php?socid='.$this->id;
         }
         else if ($option == 'category')
         {
-        	$lien = '<a href="'.DOL_URL_ROOT.'/categories/categorie.php?id='.$this->id.'&type=2';
+        	$lien = '<a target="_blank" href="'.DOL_URL_ROOT.'/categories/categorie.php?id='.$this->id.'&type=2';
         }
         else if ($option == 'category_supplier')
         {
-        	$lien = '<a href="'.DOL_URL_ROOT.'/categories/categorie.php?id='.$this->id.'&type=1';
+        	$lien = '<a target="_blank"  href="'.DOL_URL_ROOT.'/categories/categorie.php?id='.$this->id.'&type=1';
         }
 
         // By default

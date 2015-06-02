@@ -497,6 +497,7 @@ class FormFile
             $out.= '</th>';
 
             // Button
+            
             $addcolumforpicto=($delallowed || $printer || $morepicto);
             $out.= '<th align="center" colspan="'.($addcolumforpicto?'2':'1').'" class="formdocbutton liste_titre">';
             $genbutton = '<input class="button" id="'.$forname.'_generatebutton"';
@@ -509,7 +510,7 @@ class FormFile
                	$genbutton.= ' '.img_warning($langs->transnoentitiesnoconv("WarningNoDocumentModelActivated"));
             }
             if (! $allowgenifempty && ! is_array($modellist) && empty($modellist) && empty($conf->dol_no_mouse_hover) && $modulepart != 'unpaid') $genbutton='';
-            if (empty($modellist) && ! $showempty) $genbutton='';
+            if (empty($modellist) && ! $showempty  && $modulepart != 'unpaid') $genbutton='';
             $out.= $genbutton;
             $out.= '</th>';
 
