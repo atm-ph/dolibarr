@@ -399,6 +399,9 @@ if ($action == 'create' || $action == 'confirm_paiement' || $action == 'add_paie
 	                        $total_ttc+=$objp->total_ttc;
 	                        $totalrecu+=$objp->am;
 	                        $i++;
+							
+							$parameters=array();
+							$reshook=$hookmanager->executeHooks('printObjectLine',$parameters,$objp,$action); // Note that $action and $object may have been modified by hook
 	                    }
 	                    if ($i > 1)
 	                    {
