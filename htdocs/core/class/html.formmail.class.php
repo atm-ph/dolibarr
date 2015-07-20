@@ -100,7 +100,7 @@ class FormMail
         $this->withfilereadonly=0;
         $this->withbodyreadonly=0;
         $this->withdeliveryreceiptreadonly=0;
-        $this->withfckeditor=0;
+        $this->withfckeditor=-1;
 
         return 1;
     }
@@ -630,7 +630,7 @@ class FormMail
         				if (! empty($conf->global->FCKEDITOR_ENABLE_MAIL)) $this->withfckeditor=1;
 						else $this->withfckeditor=0;
         			}
-
+        			var_dump($this->withfckeditor);
         			$doleditor=new DolEditor('message',$defaultmessage,'',280,$this->ckeditortoolbar,'In',true,true,$this->withfckeditor,8,72);
         			$out.= $doleditor->Create(1);
         		}
