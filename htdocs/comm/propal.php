@@ -2439,29 +2439,36 @@ else
 		
 		//Build project location substitute text
 		$location_str='';
-		$sql = 'SELECT pb.ref FROM ';
-		$sql .= MAIN_DB_PREFIX.'place_building as pb ';
-		$sql .= 'INNER JOIN '.MAIN_DB_PREFIX."element_resources as elmres ON elmres.element_type='project' AND elmres.resource_type='building@place' AND elmres.resource_id=pb.rowid AND element_id=".$object->fk_project;
-		
-		$resql = $db->query($sql);
-		if ($resql)
-		{
-			while ($obj = $db->fetch_object($resql))
+		if (!empty($object->fk_project)) {
+			$sql = 'SELECT pb.ref FROM ';
+			$sql .= MAIN_DB_PREFIX.'place_building as pb ';
+			$sql .= 'INNER JOIN '.MAIN_DB_PREFIX."element_resources as elmres ON elmres.element_type='project' AND elmres.resource_type='building@place' AND elmres.resource_id=pb.rowid AND element_id=".$object->fk_project;
+			
+			$resql = $db->query($sql);
+			if ($resql)
 			{
-				$location_str.=$obj->ref.'<BR>';
+				while ($obj = $db->fetch_object($resql))
+				{
+					$location_str.=$obj->ref.'<BR>';
+				}
+			}
+			else
+			{
+				dol_print_error($db);
 			}
 		}
-		else
-		{
-			dol_print_error($db);
-		}
 		
+		require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
+		$formmail->substit['__PROJECT_TITLE__'] = '';
+		$formmail->substit['__PROJECT_DATE_TASK__'] = '';
+		$formmail->substit['__PROJECT_LOCATION__'] = '';
+		$formmail->substit['__DATEPLUS30__'] = dol_print_date(dol_time_plus_duree(dol_now(), 30, 'd'));
 		if ($project->id) {
 			require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
 			$formmail->substit['__PROJECT_TITLE__'] = (!empty($project->title)?$project->title:'');
 			$formmail->substit['__PROJECT_DATE_TASK__'] = (!empty($date_task)?$date_task:'');
 			$formmail->substit['__PROJECT_LOCATION__'] = (!empty($location_str)?$location_str:'');
-			$formmail->substit['__DATEPLUS30__'] = dol_print_date(dol_time_plus_duree(dol_now(), 30, 'd'));
+			
 		}
 		$formmail->substit['__PERSONALIZED__']='';
 		$formmail->substit['__CONTACTCIVNAME__']='';
