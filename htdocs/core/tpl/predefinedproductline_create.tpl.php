@@ -33,7 +33,7 @@ if (! empty($conf->margin->enabled) && ! empty($object->element) && in_array($ob
 <!-- BEGIN PHP TEMPLATE predefinedproductline_create.tpl.php -->
 
 <tr class="liste_titre nodrag nodrop">
-	<td<?php echo (! empty($conf->global->MAIN_VIEW_LINE_NUMBER) ? ' colspan="5"' : ' colspan="4"'); ?>>
+	<td<?php echo (! empty($conf->global->MAIN_VIEW_LINE_NUMBER) ? ' colspan="4"' : ' colspan="3"'); ?>>
 	<?php
 	echo '<span class="hideonsmartphone">'.$langs->trans("AddNewLine").' - </span>';
 	if (! empty($conf->product->enabled) && empty($conf->service->enabled)) echo $langs->trans('RecordedProducts');
@@ -85,7 +85,7 @@ if (! empty($conf->global->MAIN_VIEW_LINE_NUMBER)) {
 else {
 	$coldisplay=3; }
 ?>
-
+	
 	<td<?php echo (! empty($conf->global->MAIN_VIEW_LINE_NUMBER) ? ' colspan="4"' : ' colspan="3"'); ?>>
 
 	<script type="text/javascript">
