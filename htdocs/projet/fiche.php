@@ -344,8 +344,8 @@ if ($action == 'confirm_clone' && $user->rights->projet->creer && GETPOST('confi
 	$clone_project_files = GETPOST('clone_project_files') ? 1 : 0;
 	$clone_task_files = GETPOST('clone_task_files') ? 1 : 0;
     $clone_notes=GETPOST('clone_notes')?1:0;
-    $move_dates=GETPOST('move_date')?1:0;
-    $result=$object->createFromClone($object->id,$clone_contacts,$clone_tasks,$clone_project_files,$clone_task_files,$clone_notes,$move_date,0);
+    $move_dates=GETPOST('move_dates')?1:0;
+    $result=$object->createFromClone($object->id,$clone_contacts,$clone_tasks,$clone_project_files,$clone_task_files,$clone_notes,$move_dates,0);
     if ($result <= 0)
     {
         $mesg='<div class="error">'.$object->error.'</div>';
