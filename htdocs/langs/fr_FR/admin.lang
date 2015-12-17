@@ -1487,3 +1487,13 @@ TaskModelModule=Modèles de document de rapport tâches
 ##### ECM (GED) #####
 ECMSetup = Configuration du module GED
 ECMAutoTree = L'arborescence automatique est disponible
+TypeOfTemplate=Type de modèle
+MailToSendProposal=Pour l'envoi de proposition commerciale client
+MailToSendOrder=Pour l'envoi de commande client
+MailToSendInvoice=Pour l'envoi de facture client
+MailToSendShipment=Pour l'envoi de bon de livraison
+MailToSendIntervention=Pour l'envoi de fiche intervention
+MailToSendSupplierRequestForQuotation=Pour l'envoi de demande de prix fournisseur
+MailToSendSupplierOrder=Pour l'envoi de commande fournisseur
+MailToSendSupplierInvoice=Pour l'envoi de facture fournisseur
+MailToThirdparty=Pour l'envoi d'email depuis la fiche Tiers
