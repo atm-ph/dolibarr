@@ -34,6 +34,7 @@ require '../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formadmin.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formcompany.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/admin.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
 
 $langs->load("errors");
 $langs->load("admin");
@@ -362,7 +363,7 @@ $tabhelp[22] = array();
 $tabhelp[23] = array();
 $tabhelp[24] = array();
 $tabhelp[25] = array();
-$tabhelp[26] = array();
+$tabhelp[26] = array('type_template'=>$langs->trans("TemplateForElement"),'private'=>$langs->trans("TemplateIsVisibleByOwnerOnly"), 'position'=>$langs->trans("PositionIntoComboList"));
 
 // Complete all arrays with entries found into modules
 complete_dictionnary_with_modules($taborder,$tabname,$tablib,$tabsql,$tabsqlsort,$tabfield,$tabfieldvalue,$tabfieldinsert,$tabrowid,$tabcond,$tabhelp);
@@ -398,7 +399,24 @@ if ($id == 11)
 			'external' => $langs->trans('External')
 	);
 }
+if ($id == 26)
+{
+	// We save list of template type Dolibarr can manage. This list can found by a grep into code on "->param['models']"
+	$elementList = array(
+			'propal_send'    => $langs->trans('MailToSendProposal'),
+			'order_send'     => $langs->trans('MailToSendOrder'),
+			'facture_send'   => $langs->trans('MailToSendInvoice'),
 
+			'shipping_send'  => $langs->trans('MailToSendShipment'),
+			'fichinter_send' => $langs->trans('MailToSendIntervention'),
+
+			'askpricesupplier_send'  => $langs->trans('MailToSendSupplierRequestForQuotation'),
+			'order_supplier_send'    => $langs->trans('MailToSendSupplierOrder'),
+			'invoice_supplier_send'  => $langs->trans('MailToSendSupplierInvoice'),
+
+			'thirdparty'    => $langs->trans('MailToThirdparty')
+	);
+}
 // Define localtax_typeList (used for dictionnary "c_tva")
 $localtax_typeList = array();
 if ($id == 10)
@@ -778,6 +796,8 @@ if ($id)
             if ($fieldlist[$field]=='pcg_type')        { $valuetoshow=$langs->trans("Pcg_type"); }
             if ($fieldlist[$field]=='pcg_subtype')     { $valuetoshow=$langs->trans("Pcg_subtype"); }
             if ($fieldlist[$field]=='sortorder')       { $valuetoshow=$langs->trans("SortOrder"); }
+            if ($fieldlist[$field]=='type_template')   { $valuetoshow=$langs->trans("TypeOfTemplate"); }
+            
             if ($valuetoshow != '')
             {
                 print '<td align="'.$align.'">';
@@ -812,9 +832,24 @@ if ($id)
         $reshook=$hookmanager->executeHooks('createDictionaryFieldlist',$parameters, $obj, $tmpaction);    // Note that $action and $object may have been modified by some hooks
         $error=$hookmanager->error; $errors=$hookmanager->errors;
 
-        if (empty($reshook)) fieldList($fieldlist,$obj);
+        if (empty($reshook))
+        {
+        	if ($tabname[$id] == MAIN_DB_PREFIX.'c_email_templates' && $action == 'edit')
+        	{
+        		fieldList($fieldlist,$obj,$tabname[$id],'hide');
+        	}
+        	else
+        	{
+        		fieldList($fieldlist,$obj,$tabname[$id],'add');
+        	}
+        }
 
-        print '<td colspan="3" align="right"><input type="submit" class="button" name="actionadd" value="'.$langs->trans("Add").'"></td>';
+        print '<td colspan="3" align="right">';
+        if ($tabname[$id] != MAIN_DB_PREFIX.'c_email_templates' || $action != 'edit')
+        {
+        	print '<input type="submit" class="button" name="actionadd" value="'.$langs->trans("Add").'">';
+        }
+        print '</td>';
         print "</tr>";
 
         if (! empty($alabelisused))  // Si un des champs est un libelle
@@ -897,6 +932,8 @@ if ($id)
                 if ($fieldlist[$field]=='pcg_type')        { $valuetoshow=$langs->trans("Pcg_type"); }
                 if ($fieldlist[$field]=='pcg_subtype')     { $valuetoshow=$langs->trans("Pcg_subtype"); }
                 if ($fieldlist[$field]=='sortorder')       { $valuetoshow=$langs->trans("SortOrder"); }
+                if ($fieldlist[$field]=='type_template')   { $valuetoshow=$langs->trans("TypeOfTemplate"); }
+                
                 // Affiche nom du champ
                 if ($showfield)
                 {
@@ -927,7 +964,7 @@ if ($id)
                     $reshook=$hookmanager->executeHooks('editDictionaryFieldlist',$parameters,$obj, $tmpaction);    // Note that $action and $object may have been modified by some hooks
                     $error=$hookmanager->error; $errors=$hookmanager->errors;
 
-                    if (empty($reshook)) fieldList($fieldlist,$obj,$tabname[$id]);
+                    if (empty($reshook)) fieldList($fieldlist,$obj,$tabname[$id],'edit');
 
                     print '<td colspan="3" align="right"><a name="'.(! empty($obj->rowid)?$obj->rowid:$obj->code).'">&nbsp;</a><input type="submit" class="button" name="actionmodify" value="'.$langs->trans("Modify").'">';
                     print '&nbsp;<input type="submit" class="button" name="actioncancel" value="'.$langs->trans("Cancel").'"></td>';
@@ -947,6 +984,10 @@ if ($id)
                             $showfield=1;
                         	$align="left";
                             $valuetoshow=$obj->$fieldlist[$field];
+                            if ($value == 'type_template')
+                            {
+                                $valuetoshow = isset($elementList[$valuetoshow])?$elementList[$valuetoshow]:$valuetoshow;
+                            }
                             if ($value == 'element')
                             {
                                 $valuetoshow = isset($elementList[$valuetoshow])?$elementList[$valuetoshow]:$valuetoshow;
@@ -1219,14 +1260,14 @@ $db->close();
 
 
 /**
- *	Show field
+ *	Show fields in insert/edit mode
  *
  * 	@param		array	$fieldlist		Array of fields
  * 	@param		Object	$obj			If we show a particular record, obj is filled with record fields
  *  @param		string	$tabname		Name of SQL table
  *	@return		void
  */
-function fieldList($fieldlist,$obj='',$tabname='')
+function fieldList($fieldlist,$obj='',$tabname='', $context='')
 {
 	global $conf,$langs,$db;
 	global $form;
@@ -1260,6 +1301,13 @@ function fieldList($fieldlist,$obj='',$tabname='')
 		elseif ($fieldlist[$field] == 'lang') {
 			print '<td>';
 			print $formadmin->select_language($conf->global->MAIN_LANG_DEFAULT,'lang');
+			print '</td>';
+		}
+		// Le type de template
+		elseif ($fieldlist[$field] == 'type_template')
+		{
+			print '<td>';
+			print $form->selectarray('type_template', $elementList,(! empty($obj->$fieldlist[$field])?$obj->$fieldlist[$field]:''));
 			print '</td>';
 		}
 		// Le type de l'element (pour les type de contact)
@@ -1296,6 +1344,22 @@ function fieldList($fieldlist,$obj='',$tabname='')
 		}
 		elseif ($fieldlist[$field] == 'libelle_facture') {
 			print '<td><textarea cols="30" rows="'.ROWS_2.'" class="flat" name="'.$fieldlist[$field].'">'.(! empty($obj->$fieldlist[$field])?$obj->$fieldlist[$field]:'').'</textarea></td>';
+		}
+		elseif (in_array($fieldlist[$field], array('content')))
+		{
+			if ($tabname == MAIN_DB_PREFIX.'c_email_templates')
+			{
+				print '<td colspan="4"></td></tr><tr class="pair nohover"><td colspan="5">';		// To create an artificial CR for the current tr we are on
+			}
+			else print '<td>';
+			if ($context != 'hide')
+			{
+				//print '<textarea cols="3" rows="'.ROWS_2.'" class="flat" name="'.$fieldlist[$field].'">'.(! empty($obj->$fieldlist[$field])?$obj->$fieldlist[$field]:'').'</textarea>';
+				$doleditor = new DolEditor($fieldlist[$field], (! empty($obj->$fieldlist[$field])?$obj->$fieldlist[$field]:''), '', 140, 'dolibarr_mailings', 'In', 0, false, true, ROWS_5, '90%');
+				print $doleditor->Create(1);
+			}
+			else print '&nbsp;';
+			print '</td>';
 		}
 		elseif ($fieldlist[$field] == 'price' || preg_match('/^amount/i',$fieldlist[$field])) {
 			print '<td><input type="text" class="flat" value="'.price((! empty($obj->$fieldlist[$field])?$obj->$fieldlist[$field]:'')).'" size="8" name="'.$fieldlist[$field].'"></td>';
