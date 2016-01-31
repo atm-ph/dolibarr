@@ -1109,8 +1109,8 @@ else
                 $object->idprof2				= GETPOST('idprof2');
                 $object->idprof3				= GETPOST('idprof3');
                 $object->idprof4				= GETPOST('idprof4');
-        		    $object->idprof5				= GETPOST('idprof5');
-        		    $object->idprof6				= GETPOST('idprof6');
+        		$object->idprof5				= GETPOST('idprof5');
+        		$object->idprof6				= GETPOST('idprof6');
                 $object->typent_id				= GETPOST('typent_id');
                 $object->effectif_id			= GETPOST('effectif_id');
                 $object->barcode				= GETPOST('barcode');
@@ -1595,6 +1595,15 @@ else
         // Web
         print '<tr><td>'.$langs->trans('Web').'</td><td colspan="3">';
         print dol_print_url($object->url);
+        print '</td></tr>';
+        
+        print '<tr><td>';
+        print $langs->trans('Code compta auxiliaire client').'</td><td colspan="3">';
+        print '401'.str_pad($object->id, 5, "0", STR_PAD_LEFT) . $sep;
+        print '</td></tr>';
+        print '<tr><td>';
+        print $langs->trans('Code compta auxiliaire fournisseur').'</td><td colspan="3">';
+        print '411'.str_pad($object->id, 5, "0", STR_PAD_LEFT) . $sep;
         print '</td></tr>';
 
         // Skype
