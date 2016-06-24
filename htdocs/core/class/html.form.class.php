@@ -3750,8 +3750,10 @@ class Form
         global $langs;
 
         if ($value_as_key) $array=array_combine($array, $array);
-
-        $out='<select id="'.$htmlname.'" '.($disabled?'disabled="disabled" ':'').'class="flat'.($morecss?' '.$morecss:'').'" name="'.$htmlname.'" '.($option != ''?$option:'').'>';
+		
+		if($htmlname === 'TReceiver[]') $multiple = 'multiple';
+		
+        $out='<select '.$multiple.' id="'.$htmlname.'" '.($disabled?'disabled="disabled" ':'').'class="flat'.($morecss?' '.$morecss:'').'" name="'.$htmlname.'" '.($option != ''?$option:'').'>';
 
         if ($show_empty)
         {

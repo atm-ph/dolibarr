@@ -512,116 +512,135 @@ if ($action == 'send' && ! GETPOST('addfile') && ! GETPOST('removedfile') && ! G
 
 	if ($object->id > 0)
 	{
+		$TReceiver = $_POST['TReceiver'];
+		$TSendTo = array();
+		
 		if ($_POST['sendto'])
 		{
 			// Le destinataire a ete fourni via le champ libre
-			$sendto = $_POST['sendto'];
-			$sendtoid = 0;
+			$TSendTo[0]['sendto'] = $_POST['sendto'];
+			$TSendTo[0]['sendtoid'] = 0;
 		}
-		elseif ($_POST['receiver'] != '-1')
+		elseif (!empty($TReceiver))
 		{
-			// Recipient was provided from combo list
-			if ($_POST['receiver'] == 'thirdparty')	// Id of third party
-			{
-				$sendto = $object->client->email;
-				$sendtoid = 0;
-			}
-			else	// Id du contact
-			{
-				$sendto = $object->client->contact_get_property($_POST['receiver'],'email');
-				$sendtoid = $_POST['receiver'];
-			}
-		}
-
-		if (dol_strlen($sendto))
-		{
-			$langs->load("commercial");
-
-			$from = $_POST['fromname'] . ' <' . $_POST['frommail'] .'>';
-			$replyto = $_POST['replytoname']. ' <' . $_POST['replytomail'].'>';
-			$message = $_POST['message'];
-			$sendtocc = $_POST['sendtocc'];
-			$deliveryreceipt = $_POST['deliveryreceipt'];
-
-			if (dol_strlen($_POST['subject'])) $subject = $_POST['subject'];
-			else $subject = $langs->transnoentities('Propal').' '.$object->ref;
-			$actiontypecode='AC_PROP';
-			$actionmsg = $langs->transnoentities('MailSentBy').' '.$from.' '.$langs->transnoentities('To').' '.$sendto.".\n";
-			if ($message)
-			{
-				$actionmsg.=$langs->transnoentities('MailTopic').": ".$subject."\n";
-				$actionmsg.=$langs->transnoentities('TextUsedInTheMessageBody').":\n";
-				$actionmsg.=$message;
-			}
-			$actionmsg2=$langs->transnoentities('Action'.$actiontypecode);
-
-			// Create form object
-			include_once DOL_DOCUMENT_ROOT.'/core/class/html.formmail.class.php';
-			$formmail = new FormMail($db);
-
-			$attachedfiles=$formmail->get_attached_files();
-			$filepath = $attachedfiles['paths'];
-			$filename = $attachedfiles['names'];
-			$mimetype = $attachedfiles['mimes'];
-
-			// Envoi de la propal
-			require_once DOL_DOCUMENT_ROOT.'/core/class/CMailFile.class.php';
-			$mailfile = new CMailFile($subject,$sendto,$from,$message,$filepath,$mimetype,$filename,$sendtocc,'',$deliveryreceipt,-1);
-			if ($mailfile->error)
-			{
-				setEventMessage($mailfile->error, 'errors');
-			}
-			else
-			{
-				$result=$mailfile->sendfile();
-				if ($result)
+			foreach($TReceiver as $i=>$receiver) {
+				
+				// Recipient was provided from combo list
+				if ($receiver == 'thirdparty')	// Id of third party
 				{
-					// Initialisation donnees
-					$object->sendtoid		= $sendtoid;
-					$object->actiontypecode	= $actiontypecode;
-					$object->actionmsg		= $actionmsg;
-					$object->actionmsg2		= $actionmsg2;
-					$object->fk_element		= $object->id;
-					$object->elementtype	= $object->element;
+					$TSendTo[$i]['sendto'] = $object->client->email;
+					$TSendTo[$i]['sendtoid'] = 0;
+				}
+				else	// Id du contact
+				{
+					$TSendTo[$i]['sendto'] = $object->client->contact_get_property($receiver,'email');
+					$TSendTo[$i]['sendtoid'] = $receiver;
+				}
+				
+			}
+		}
 
-					// Appel des triggers
-					include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
-					$interface=new Interfaces($db);
-					$result=$interface->run_triggers('PROPAL_SENTBYMAIL',$object,$user,$langs,$conf);
-					if ($result < 0) {
-						$error++; $object->errors=$interface->errors;
-					}
-					// Fin appel triggers
-
-					if (! $error)
-					{
-						// Redirect here
-						// This avoid sending mail twice if going out and then back to page
-						$mesg=$langs->trans('MailSuccessfulySent',$mailfile->getValidAddress($from,2),$mailfile->getValidAddress($sendto,2));
-						setEventMessage($mesg);
-						header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
-						exit;
-					}
-					else
-					{
-						dol_print_error($db);
-					}
+		if (!empty($TSendTo))
+		{
+			foreach($TSendTo as $TData) {
+				
+				$sendto = $TData['sendto'];
+				$sendtoid = $TData['sendtoid'];
+				
+				$langs->load("commercial");
+	
+				$from = $_POST['fromname'] . ' <' . $_POST['frommail'] .'>';
+				$replyto = $_POST['replytoname']. ' <' . $_POST['replytomail'].'>';
+				$message = $_POST['message'];
+				$sendtocc = $_POST['sendtocc'];
+				$deliveryreceipt = $_POST['deliveryreceipt'];
+	
+				if (dol_strlen($_POST['subject'])) $subject = $_POST['subject'];
+				else $subject = $langs->transnoentities('Propal').' '.$object->ref;
+				$actiontypecode='AC_PROP';
+				$actionmsg = $langs->transnoentities('MailSentBy').' '.$from.' '.$langs->transnoentities('To').' '.$sendto.".\n";
+				if ($message)
+				{
+					$actionmsg.=$langs->transnoentities('MailTopic').": ".$subject."\n";
+					$actionmsg.=$langs->transnoentities('TextUsedInTheMessageBody').":\n";
+					$actionmsg.=$message;
+				}
+				$actionmsg2=$langs->transnoentities('Action'.$actiontypecode);
+	
+				// Create form object
+				include_once DOL_DOCUMENT_ROOT.'/core/class/html.formmail.class.php';
+				$formmail = new FormMail($db);
+	
+				$attachedfiles=$formmail->get_attached_files();
+				$filepath = $attachedfiles['paths'];
+				$filename = $attachedfiles['names'];
+				$mimetype = $attachedfiles['mimes'];
+	
+				// Envoi de la propal
+				require_once DOL_DOCUMENT_ROOT.'/core/class/CMailFile.class.php';
+				$mailfile = new CMailFile($subject,$sendto,$from,$message,$filepath,$mimetype,$filename,$sendtocc,'',$deliveryreceipt,-1);
+				if ($mailfile->error)
+				{
+					setEventMessage($mailfile->error, 'errors');
 				}
 				else
 				{
-					$langs->load("other");
-					if ($mailfile->error)
+					$result=$mailfile->sendfile();
+					if ($result)
 					{
-						$mesg.=$langs->trans('ErrorFailedToSendMail',$from,$sendto);
-						$mesg.='<br>'.$mailfile->error;
+						// Initialisation donnees
+						$object->sendtoid		= $sendtoid;
+						$object->actiontypecode	= $actiontypecode;
+						$object->actionmsg		= $actionmsg;
+						$object->actionmsg2		= $actionmsg2;
+						$object->fk_element		= $object->id;
+						$object->elementtype	= $object->element;
+	
+						// Appel des triggers
+						include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
+						$interface=new Interfaces($db);
+						$result=$interface->run_triggers('PROPAL_SENTBYMAIL',$object,$user,$langs,$conf);
+						if ($result < 0) {
+							$error++; $object->errors=$interface->errors;
+						}
+						// Fin appel triggers
+	
+						if (! $error)
+						{
+							$mesg=$langs->trans('MailSuccessfulySent',$mailfile->getValidAddress($from,2),$mailfile->getValidAddress($sendto,2));
+							setEventMessage($mesg);
+							$header_ok = true;
+						}
+						else
+						{
+							dol_print_error($db);
+						}
 					}
 					else
 					{
-						$mesg.='No mail sent. Feature is disabled by option MAIN_DISABLE_ALL_MAILS';
+						$langs->load("other");
+						if ($mailfile->error)
+						{
+							$mesg.=$langs->trans('ErrorFailedToSendMail',$from,$sendto);
+							$mesg.='<br>'.$mailfile->error;
+						}
+						else
+						{
+							$mesg.='No mail sent. Feature is disabled by option MAIN_DISABLE_ALL_MAILS';
+						}
+						setEventMessage($mesg, 'errors');
 					}
-					setEventMessage($mesg, 'errors');
 				}
+
 			}
+
+			// Redirect here
+			// This avoid sending mail twice if going out and then back to page
+			if($header_ok) {
+				header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
+				exit;
+			}
+
 		}
 		else
 		{

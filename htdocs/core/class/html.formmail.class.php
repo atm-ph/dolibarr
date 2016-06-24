@@ -413,7 +413,7 @@ class FormMail
         			if (! empty($this->withto) && is_array($this->withto))
         			{
         				if (! empty($this->withtofree)) $out.= " ".$langs->trans("or")." ";
-        				$out.= $form->selectarray("receiver", $this->withto, GETPOST("receiver"), 1);
+        				$out.= $form->selectarray("TReceiver[]", $this->withto, GETPOST("receiver"), 1);
         			}
         			if (isset($this->withtosocid) && $this->withtosocid > 0) // deprecated. TODO Remove this. Instead, fill withto with array before calling method.
         			{
@@ -425,7 +425,7 @@ class FormMail
         					$liste[$key]=$value;
         				}
         				if ($this->withtofree) $out.= " ".$langs->trans("or")." ";
-        				$out.= $form->selectarray("receiver", $liste, GETPOST("receiver"), 1);
+        				$out.= $form->selectarray("TReceiver[]", $liste, GETPOST("receiver"), 1);
         			}
         		}
         		$out.= "</td></tr>\n";
