@@ -1358,130 +1358,153 @@ if ($action == 'send' && ! GETPOST('addfile') && ! GETPOST('removedfile') && ! G
 
 		//        if (is_readable($file))
 		//        {
+		
+		$TReceiver = $_POST['TReceiver'];
+		$TSendTo = array();
+			
 		if (GETPOST('sendto'))
 		{
 			// Le destinataire a ete fourni via le champ libre
-			$sendto = GETPOST('sendto');
-			$sendtoid = 0;
+			$TSendTo[0]['sendto'] = $_POST['sendto'];
+			$TSendTo[0]['sendtoid'] = 0;
 		}
-		elseif (GETPOST('receiver') != '-1')
+		elseif (!empty($TReceiver))
 		{
-			// Recipient was provided from combo list
-			if (GETPOST('receiver') == 'thirdparty') // Id of third party
-			{
-				$sendto = $object->client->email;
-				$sendtoid = 0;
-			}
-			else	// Id du contact
-			{
-				$sendto = $object->client->contact_get_property(GETPOST('receiver'),'email');
-				$sendtoid = GETPOST('receiver');
-			}
-		}
-
-		if (dol_strlen($sendto))
-		{
-			$langs->load("commercial");
-
-			$from = GETPOST('fromname') . ' <' . GETPOST('frommail') .'>';
-			$replyto = GETPOST('replytoname'). ' <' . GETPOST('replytomail').'>';
-			$message = GETPOST('message');
-			$sendtocc = GETPOST('sendtocc');
-			$deliveryreceipt = GETPOST('deliveryreceipt');
-
-			if ($action == 'send')
-			{
-				if (dol_strlen(GETPOST('subject'))) $subject=GETPOST('subject');
-				else $subject = $langs->transnoentities('Order').' '.$object->ref;
-				$actiontypecode='AC_COM';
-				$actionmsg = $langs->transnoentities('MailSentBy').' '.$from.' '.$langs->transnoentities('To').' '.$sendto.".\n";
-				if ($message)
+			foreach($TReceiver as $i=>$receiver) {
+				
+				// Recipient was provided from combo list
+				if ($receiver == 'thirdparty')	// Id of third party
 				{
-					$actionmsg.=$langs->transnoentities('MailTopic').": ".$subject."\n";
-					$actionmsg.=$langs->transnoentities('TextUsedInTheMessageBody').":\n";
-					$actionmsg.=$message;
+					$TSendTo[$i]['sendto'] = $object->client->email;
+					$TSendTo[$i]['sendtoid'] = 0;
 				}
-				$actionmsg2=$langs->transnoentities('Action'.$actiontypecode);
-			}
-
-			// Create form object
-			include_once DOL_DOCUMENT_ROOT.'/core/class/html.formmail.class.php';
-			$formmail = new FormMail($db);
-
-			$attachedfiles=$formmail->get_attached_files();
-			$filepath = $attachedfiles['paths'];
-			$filename = $attachedfiles['names'];
-			$mimetype = $attachedfiles['mimes'];
-
-			// Send mail
-			require_once DOL_DOCUMENT_ROOT.'/core/class/CMailFile.class.php';
-			$mailfile = new CMailFile($subject,$sendto,$from,$message,$filepath,$mimetype,$filename,$sendtocc,'',$deliveryreceipt,-1);
-			if ($mailfile->error)
-			{
-				$mesg='<div class="error">'.$mailfile->error.'</div>';
-			}
-			else
-			{
-				$result=$mailfile->sendfile();
-				if ($result)
+				else	// Id du contact
 				{
-					$mesg=$langs->trans('MailSuccessfulySent',$mailfile->getValidAddress($from,2),$mailfile->getValidAddress($sendto,2));	// Must not contains "
+					$TSendTo[$i]['sendto'] = $object->client->contact_get_property($receiver,'email');
+					$TSendTo[$i]['sendtoid'] = $receiver;
+				}
+				
+			}
+		}
 
-					$error=0;
-
-					// Initialisation donnees
-					$object->sendtoid		= $sendtoid;
-					$object->actiontypecode	= $actiontypecode;
-					$object->actionmsg		= $actionmsg;
-					$object->actionmsg2		= $actionmsg2;
-					$object->fk_element		= $object->id;
-					$object->elementtype	= $object->element;
-
-					// Appel des triggers
-					include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
-					$interface=new Interfaces($db);
-					$result=$interface->run_triggers('ORDER_SENTBYMAIL',$object,$user,$langs,$conf);
-					if ($result < 0) {
-						$error++; $this->errors=$interface->errors;
-					}
-					// Fin appel triggers
-
-					if ($error)
+		if (!empty($TSendTo))
+		{
+			
+			foreach($TSendTo as $TData) {
+				
+				$sendto = $TData['sendto'];
+				$sendtoid = $TData['sendtoid'];
+				
+				$langs->load("commercial");
+	
+				$from = GETPOST('fromname') . ' <' . GETPOST('frommail') .'>';
+				$replyto = GETPOST('replytoname'). ' <' . GETPOST('replytomail').'>';
+				$message = GETPOST('message');
+				$sendtocc = GETPOST('sendtocc');
+				$deliveryreceipt = GETPOST('deliveryreceipt');
+	
+				if ($action == 'send')
+				{
+					if (dol_strlen(GETPOST('subject'))) $subject=GETPOST('subject');
+					else $subject = $langs->transnoentities('Order').' '.$object->ref;
+					$actiontypecode='AC_COM';
+					$actionmsg = $langs->transnoentities('MailSentBy').' '.$from.' '.$langs->transnoentities('To').' '.$sendto.".\n";
+					if ($message)
 					{
-						dol_print_error($db);
+						$actionmsg.=$langs->transnoentities('MailTopic').": ".$subject."\n";
+						$actionmsg.=$langs->transnoentities('TextUsedInTheMessageBody').":\n";
+						$actionmsg.=$message;
 					}
-					else
-					{
-						// Redirect here
-						// This avoid sending mail twice if going out and then back to page
-						header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'&mesg='.urlencode($mesg));
-						exit;
-					}
+					$actionmsg2=$langs->transnoentities('Action'.$actiontypecode);
+				}
+	
+				// Create form object
+				include_once DOL_DOCUMENT_ROOT.'/core/class/html.formmail.class.php';
+				$formmail = new FormMail($db);
+	
+				$attachedfiles=$formmail->get_attached_files();
+				$filepath = $attachedfiles['paths'];
+				$filename = $attachedfiles['names'];
+				$mimetype = $attachedfiles['mimes'];
+	
+				// Send mail
+				require_once DOL_DOCUMENT_ROOT.'/core/class/CMailFile.class.php';
+				$mailfile = new CMailFile($subject,$sendto,$from,$message,$filepath,$mimetype,$filename,$sendtocc,'',$deliveryreceipt,-1);
+				if ($mailfile->error)
+				{
+					$mesg='<div class="error">'.$mailfile->error.'</div>';
 				}
 				else
 				{
-					$langs->load("other");
-					$mesg='<div class="error">';
-					if ($mailfile->error)
+					$result=$mailfile->sendfile();
+					if ($result)
 					{
-						$mesg.=$langs->trans('ErrorFailedToSendMail',$from,$sendto);
-						$mesg.='<br>'.$mailfile->error;
+						$mesg=$langs->trans('MailSuccessfulySent',$mailfile->getValidAddress($from,2),$mailfile->getValidAddress($sendto,2));	// Must not contains "
+	
+						$error=0;
+	
+						// Initialisation donnees
+						$object->sendtoid		= $sendtoid;
+						$object->actiontypecode	= $actiontypecode;
+						$object->actionmsg		= $actionmsg;
+						$object->actionmsg2		= $actionmsg2;
+						$object->fk_element		= $object->id;
+						$object->elementtype	= $object->element;
+	
+						// Appel des triggers
+						include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
+						$interface=new Interfaces($db);
+						$result=$interface->run_triggers('ORDER_SENTBYMAIL',$object,$user,$langs,$conf);
+						if ($result < 0) {
+							$error++; $this->errors=$interface->errors;
+						}
+						// Fin appel triggers
+	
+						if ($error)
+						{
+							dol_print_error($db);
+						}
+						else
+						{
+							$mesg=$langs->trans('MailSuccessfulySent',$mailfile->getValidAddress($from,2),$mailfile->getValidAddress($sendto,2));
+							setEventMessage($mesg);
+							$header_ok = true;
+						}
 					}
 					else
 					{
-						$mesg.='No mail sent. Feature is disabled by option MAIN_DISABLE_ALL_MAILS';
+						$langs->load("other");
+						$mesg='<div class="error">';
+						if ($mailfile->error)
+						{
+							$mesg.=$langs->trans('ErrorFailedToSendMail',$from,$sendto);
+							$mesg.='<br>'.$mailfile->error;
+						}
+						else
+						{
+							$mesg.='No mail sent. Feature is disabled by option MAIN_DISABLE_ALL_MAILS';
+						}
+						$mesg.='</div>';
 					}
-					$mesg.='</div>';
 				}
+				/*            }
+				 else
+				{
+				$langs->load("other");
+				$mesg='<div class="error">'.$langs->trans('ErrorMailRecipientIsEmpty').' !</div>';
+				$action='presend';
+				dol_syslog('Recipient email is empty');
+				}*/
+			
 			}
-			/*            }
-			 else
-			{
-			$langs->load("other");
-			$mesg='<div class="error">'.$langs->trans('ErrorMailRecipientIsEmpty').' !</div>';
-			$action='presend';
-			dol_syslog('Recipient email is empty');
-			}*/
+			
+			// Redirect here
+			// This avoid sending mail twice if going out and then back to page
+			if($header_ok) {
+				header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
+				exit;
+			}
+			
 		}
 		else
 		{

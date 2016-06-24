@@ -1726,143 +1726,168 @@ if (($action == 'send' || $action == 'relance') && ! $_POST['addfile'] && ! $_PO
 
 		//        if (is_readable($file))
 		//        {
+		
+		$TReceiver = $_POST['TReceiver'];
+		$TSendTo = array();
+			
 		if ($_POST['sendto'])
 		{
 			// Le destinataire a ete fourni via le champ libre
-			$sendto = $_POST['sendto'];
-			$sendtoid = 0;
+			$TSendTo[0]['sendto'] = $_POST['sendto'];
+			$TSendTo[0]['sendtoid'] = 0;
 		}
-		elseif ($_POST['receiver'] != '-1')
+		elseif (!empty($TReceiver))
 		{
-			// Recipient was provided from combo list
-			if ($_POST['receiver'] == 'thirdparty') // Id of third party
-			{
-				$sendto = $object->client->email;
-				$sendtoid = 0;
+			
+			foreach($TReceiver as $i=>$receiver) {
+				
+				// Recipient was provided from combo list
+				if ($receiver == 'thirdparty')	// Id of third party
+				{
+					$TSendTo[$i]['sendto'] = $object->client->email;
+					$TSendTo[$i]['sendtoid'] = 0;
+				}
+				else	// Id du contact
+				{
+					$TSendTo[$i]['sendto'] = $object->client->contact_get_property($receiver,'email');
+					$TSendTo[$i]['sendtoid'] = $receiver;
+				}
+			
 			}
-			else	// Id du contact
-			{
-				$sendto = $object->client->contact_get_property($_POST['receiver'],'email');
-				$sendtoid = $_POST['receiver'];
-			}
+			
 		}
 
-		if (dol_strlen($sendto))
+		if (!empty($TSendTo))
 		{
-			$langs->load("commercial");
-
-			$from = $_POST['fromname'] . ' <' . $_POST['frommail'] .'>';
-			$replyto = $_POST['replytoname']. ' <' . $_POST['replytomail'].'>';
-			$message = $_POST['message'];
-			$sendtocc = $_POST['sendtocc'];
-			$deliveryreceipt = $_POST['deliveryreceipt'];
-
-			if ($action == 'send')
-			{
-				if (dol_strlen($_POST['subject'])) $subject = $_POST['subject'];
-				else $subject = $langs->transnoentities('Bill').' '.$object->ref;
-				$actiontypecode='AC_FAC';
-				$actionmsg=$langs->transnoentities('MailSentBy').' '.$from.' '.$langs->transnoentities('To').' '.$sendto.".\n";
-				if ($message)
+			
+			foreach($TSendTo as $TData) {
+				
+				$sendto = $TData['sendto'];
+				$sendtoid = $TData['sendtoid'];
+			
+				$langs->load("commercial");
+	
+				$from = $_POST['fromname'] . ' <' . $_POST['frommail'] .'>';
+				$replyto = $_POST['replytoname']. ' <' . $_POST['replytomail'].'>';
+				$message = $_POST['message'];
+				$sendtocc = $_POST['sendtocc'];
+				$deliveryreceipt = $_POST['deliveryreceipt'];
+	
+				if ($action == 'send')
 				{
-					$actionmsg.=$langs->transnoentities('MailTopic').": ".$subject."\n";
-					$actionmsg.=$langs->transnoentities('TextUsedInTheMessageBody').":\n";
-					$actionmsg.=$message;
+					if (dol_strlen($_POST['subject'])) $subject = $_POST['subject'];
+					else $subject = $langs->transnoentities('Bill').' '.$object->ref;
+					$actiontypecode='AC_FAC';
+					$actionmsg=$langs->transnoentities('MailSentBy').' '.$from.' '.$langs->transnoentities('To').' '.$sendto.".\n";
+					if ($message)
+					{
+						$actionmsg.=$langs->transnoentities('MailTopic').": ".$subject."\n";
+						$actionmsg.=$langs->transnoentities('TextUsedInTheMessageBody').":\n";
+						$actionmsg.=$message;
+					}
+					//$actionmsg2=$langs->transnoentities('Action'.$actiontypecode);
 				}
-				//$actionmsg2=$langs->transnoentities('Action'.$actiontypecode);
-			}
-			if ($action == 'relance')
-			{
-				if (dol_strlen($_POST['subject'])) $subject = $_POST['subject'];
-				else $subject = $langs->transnoentities('Relance facture '.$object->ref);
-				$actiontypecode='AC_FAC';
-				$actionmsg=$langs->transnoentities('MailSentBy').' '.$from.' '.$langs->transnoentities('To').' '.$sendto.".\n";
-				if ($message) {
-					$actionmsg.=$langs->transnoentities('MailTopic').": ".$subject."\n";
-					$actionmsg.=$langs->transnoentities('TextUsedInTheMessageBody').":\n";
-					$actionmsg.=$message;
-				}
-				//$actionmsg2=$langs->transnoentities('Action'.$actiontypecode);
-			}
-
-			// Create form object
-			include_once DOL_DOCUMENT_ROOT.'/core/class/html.formmail.class.php';
-			$formmail = new FormMail($db);
-
-			$attachedfiles=$formmail->get_attached_files();
-			$filepath = $attachedfiles['paths'];
-			$filename = $attachedfiles['names'];
-			$mimetype = $attachedfiles['mimes'];
-
-			// Send mail
-			require_once DOL_DOCUMENT_ROOT.'/core/class/CMailFile.class.php';
-			$mailfile = new CMailFile($subject,$sendto,$from,$message,$filepath,$mimetype,$filename,$sendtocc,'',$deliveryreceipt,-1);
-			if ($mailfile->error)
-			{
-				$mesgs[]='<div class="error">'.$mailfile->error.'</div>';
-			}
-			else
-			{
-				$result=$mailfile->sendfile();
-				if ($result)
+				if ($action == 'relance')
 				{
-					$error=0;
-
-					// Initialisation donnees
-					$object->sendtoid		= $sendtoid;
-					$object->actiontypecode	= $actiontypecode;
-					$object->actionmsg		= $actionmsg;  // Long text
-					$object->actionmsg2		= $actionmsg2; // Short text
-					$object->fk_element		= $object->id;
-					$object->elementtype	= $object->element;
-
-					// Appel des triggers
-					include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
-					$interface=new Interfaces($db);
-					$result=$interface->run_triggers('BILL_SENTBYMAIL',$object,$user,$langs,$conf);
-					if ($result < 0) {
-						$error++; $object->errors=$interface->errors;
+					if (dol_strlen($_POST['subject'])) $subject = $_POST['subject'];
+					else $subject = $langs->transnoentities('Relance facture '.$object->ref);
+					$actiontypecode='AC_FAC';
+					$actionmsg=$langs->transnoentities('MailSentBy').' '.$from.' '.$langs->transnoentities('To').' '.$sendto.".\n";
+					if ($message) {
+						$actionmsg.=$langs->transnoentities('MailTopic').": ".$subject."\n";
+						$actionmsg.=$langs->transnoentities('TextUsedInTheMessageBody').":\n";
+						$actionmsg.=$message;
 					}
-					// Fin appel triggers
-
-					if ($error)
-					{
-						dol_print_error($db);
-					}
-					else
-					{
-						// Redirect here
-						// This avoid sending mail twice if going out and then back to page
-						$mesg=$langs->trans('MailSuccessfulySent',$mailfile->getValidAddress($from,2),$mailfile->getValidAddress($sendto,2));
-						setEventMessage($mesg);
-						header('Location: '.$_SERVER["PHP_SELF"].'?facid='.$object->id);
-						exit;
-					}
+					//$actionmsg2=$langs->transnoentities('Action'.$actiontypecode);
+				}
+	
+				// Create form object
+				include_once DOL_DOCUMENT_ROOT.'/core/class/html.formmail.class.php';
+				$formmail = new FormMail($db);
+	
+				$attachedfiles=$formmail->get_attached_files();
+				$filepath = $attachedfiles['paths'];
+				$filename = $attachedfiles['names'];
+				$mimetype = $attachedfiles['mimes'];
+	
+				// Send mail
+				require_once DOL_DOCUMENT_ROOT.'/core/class/CMailFile.class.php';
+				$mailfile = new CMailFile($subject,$sendto,$from,$message,$filepath,$mimetype,$filename,$sendtocc,'',$deliveryreceipt,-1);
+				if ($mailfile->error)
+				{
+					$mesgs[]='<div class="error">'.$mailfile->error.'</div>';
 				}
 				else
 				{
-					$langs->load("other");
-					$mesg='<div class="error">';
-					if ($mailfile->error)
+					$result=$mailfile->sendfile();
+					if ($result)
 					{
-						$mesg.=$langs->trans('ErrorFailedToSendMail',$from,$sendto);
-						$mesg.='<br>'.$mailfile->error;
+						$error=0;
+	
+						// Initialisation donnees
+						$object->sendtoid		= $sendtoid;
+						$object->actiontypecode	= $actiontypecode;
+						$object->actionmsg		= $actionmsg;  // Long text
+						$object->actionmsg2		= $actionmsg2; // Short text
+						$object->fk_element		= $object->id;
+						$object->elementtype	= $object->element;
+	
+						// Appel des triggers
+						include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
+						$interface=new Interfaces($db);
+						$result=$interface->run_triggers('BILL_SENTBYMAIL',$object,$user,$langs,$conf);
+						if ($result < 0) {
+							$error++; $object->errors=$interface->errors;
+						}
+						// Fin appel triggers
+	
+						if ($error)
+						{
+							dol_print_error($db);
+						}
+						else
+						{
+							// Redirect here
+							// This avoid sending mail twice if going out and then back to page
+							$mesg=$langs->trans('MailSuccessfulySent',$mailfile->getValidAddress($from,2),$mailfile->getValidAddress($sendto,2));
+							setEventMessage($mesg);
+							$header_ok = true;
+						}
 					}
 					else
 					{
-						$mesg.='No mail sent. Feature is disabled by option MAIN_DISABLE_ALL_MAILS';
+						$langs->load("other");
+						$mesg='<div class="error">';
+						if ($mailfile->error)
+						{
+							$mesg.=$langs->trans('ErrorFailedToSendMail',$from,$sendto);
+							$mesg.='<br>'.$mailfile->error;
+						}
+						else
+						{
+							$mesg.='No mail sent. Feature is disabled by option MAIN_DISABLE_ALL_MAILS';
+						}
+						$mesg.='</div>';
+						$mesgs[]=$mesg;
 					}
-					$mesg.='</div>';
-					$mesgs[]=$mesg;
 				}
+				/*            }
+				 else
+				{
+				$langs->load("other");
+				$mesgs[]='<div class="error">'.$langs->trans('ErrorMailRecipientIsEmpty').'</div>';
+				dol_syslog('Recipient email is empty');
+				}*/
+			
 			}
-			/*            }
-			 else
-			{
-			$langs->load("other");
-			$mesgs[]='<div class="error">'.$langs->trans('ErrorMailRecipientIsEmpty').'</div>';
-			dol_syslog('Recipient email is empty');
-			}*/
+
+			// Redirect here
+			// This avoid sending mail twice if going out and then back to page
+			if($header_ok) {
+				header('Location: '.$_SERVER["PHP_SELF"].'?facid='.$object->id);
+				exit;
+			}
+			
 		}
 		else
 		{
