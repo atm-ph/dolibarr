@@ -79,7 +79,9 @@ $pid=GETPOST("projectid","int",3);
 $status=GETPOST("status");
 $type=GETPOST("type");
 $maxprint=(isset($_GET["maxprint"])?GETPOST("maxprint"):$conf->global->AGENDA_MAX_EVENTS_DAY_VIEW);
-$actioncode=GETPOST("actioncode","alpha",3)?GETPOST("actioncode","alpha",3):(GETPOST("actioncode")=='0'?'0':(empty($conf->global->AGENDA_USE_EVENT_TYPE)?'AC_OTH':''));
+//$actioncode=GETPOST("actioncode","alpha",3)?GETPOST("actioncode","alpha",3):(GETPOST("actioncode")=='0'?'0':(empty($conf->global->AGENDA_USE_EVENT_TYPE)?'AC_OTH':''));
+$actioncode = GETPOST('actioncode', 'array');
+if (!empty($actioncode) && $actioncode[0] != 0 && empty($conf->global->AGENDA_USE_EVENT_TYPE)) $actioncode[] = 'AC_OTH';
 
 if (GETPOST('viewcal') && $action != 'show_day' && $action != 'show_week')  {
     $action='show_month'; $day='';
@@ -235,7 +237,13 @@ if ($filterd) $param.="&filterd=".$filterd;
 if ($socid)   $param.="&socid=".$socid;
 if ($showbirthday) $param.="&showbirthday=1";
 if ($pid)     $param.="&projectid=".$pid;
-if ($actioncode != '') $param.="&actioncode=".$actioncode;
+//if ($actioncode != '') $param.="&actioncode=".$actioncode;
+if (!empty($actioncode)) {
+	foreach ($actioncode as $ac) 
+	{
+		$param.="&actioncode[]=".$ac;
+	}
+}
 if ($type)   $param.="&type=".$type;
 if ($action == 'show_day' || $action == 'show_week') $param.='&action='.$action;
 $param.="&maxprint=".$maxprint;
@@ -315,7 +323,16 @@ $sql.= " ".MAIN_DB_PREFIX."actioncomm as a)";
 if (! $user->rights->societe->client->voir && ! $socid) $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe_commerciaux as sc ON a.fk_soc = sc.fk_soc";
 $sql.= ' WHERE a.fk_action = ca.id';
 $sql.= ' AND a.entity IN ('.getEntity('agenda', 1).')';
-if ($actioncode) $sql.=" AND ca.code='".$db->escape($actioncode)."'";
+//if ($actioncode) $sql.=" AND ca.code IN ('".$db->escape($actioncode)."')";
+if (!empty($actioncode)) {
+	$s = '';
+	foreach ($actioncode as $ac)
+	{
+		$s .= "'".$ac."',";
+	}
+	$s = rtrim($s, ',');
+	$sql.=" AND ca.code IN (".$s.")";
+}
 if ($pid) $sql.=" AND a.fk_project=".$db->escape($pid);
 if (! $user->rights->societe->client->voir && ! $socid) $sql.= " AND (a.fk_soc IS NULL OR sc.fk_user = " .$user->id . ")";
 if ($user->societe_id) $sql.= ' AND a.fk_soc = '.$user->societe_id; // To limit to external user company
@@ -1211,7 +1228,14 @@ function show_day_events($db, $day, $month, $year, $monthshown, $style, &$eventa
                 	print '<a href="'.DOL_URL_ROOT.'/comm/action/index.php?maxprint=0&month='.$monthshown.'&year='.$year;
                     print ($status?'&status='.$status:'').($filter?'&filter='.$filter:'');
                     print ($filtera?'&filtera='.$filtera:'').($filtert?'&filtert='.$filtert:'').($filterd?'&filterd='.$filterd:'');
-                    print ($actioncode!=''?'&actioncode='.$actioncode:'');
+                    //print ($actioncode!=''?'&actioncode='.$actioncode:'');
+                    if (!empty($actioncode))
+					{
+						foreach ($actioncode as $ac)
+						{
+							print '&actioncode[]='.$ac;
+						}
+					}
                     print '">'.img_picto("all","1downarrow_selected.png").' ...';
                     print ' +'.(count($eventarray[$daykey])-$maxprint);
                     print '</a>';

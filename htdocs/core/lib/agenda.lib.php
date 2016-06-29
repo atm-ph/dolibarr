@@ -92,7 +92,9 @@ function print_actions_filter($form, $canedit, $status, $year, $month, $day, $sh
 		print $langs->trans("Type");
 		print ' &nbsp;</td><td class="nowrap maxwidthonsmartphone">';
 
-		print $formactions->select_type_actions($actioncode, "actioncode", '', (empty($conf->global->AGENDA_USE_EVENT_TYPE) ? 1 : 0));
+		$is_multiple = false;
+		if (is_array($actioncode)) $is_multiple = true;
+		print $formactions->select_type_actions($actioncode, "actioncode", '', (empty($conf->global->AGENDA_USE_EVENT_TYPE) ? 1 : 0), $is_multiple);
 
 		print '</td></tr>';
 	}

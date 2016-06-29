@@ -3817,6 +3817,22 @@ class Form
 
     		if (! empty($conf->global->MAIN_USE_JQUERY_MULTISELECT) && is_array($selected) && ! empty($selected))
     		{
+				if (! empty($array))
+    			{
+    				foreach ($array as $key => $value)
+    				{
+    					$attr_selected = '';
+						if (in_array($key, $selected, true)) $attr_selected = 'selected="selected"';
+						
+    					$out.= '<option value="'.$key.'" '.$attr_selected.'>';
+    					$newval = ($translate ? $langs->trans(ucfirst($value)) : $value);
+    					$newval = ($key_in_label ? $key.' - '.$newval : $newval);
+    					$out.= dol_htmlentitiesbr($newval);
+    					$out.= '</option>'."\n";
+    				}
+    			}
+				
+				/*
     			foreach ($selected as $selected_value)
     			{
     				foreach($array as $key => $value)
@@ -3844,7 +3860,7 @@ class Form
     					$out.= dol_htmlentitiesbr($newval);
     					$out.= '</option>'."\n";
     				}
-    			}
+    			}*/
     		}
     		else
     		{

@@ -38,7 +38,8 @@ $action=GETPOST('action','alpha');
 $year=GETPOST("year",'int');
 $month=GETPOST("month",'int');
 $day=GETPOST("day",'int');
-$actioncode=GETPOST("actioncode","alpha",3);
+//$actioncode=GETPOST("actioncode","alpha",3);
+$actioncode=GETPOST("actioncode", 'array');
 $pid=GETPOST("projectid",'int',3);
 $status=GETPOST("status",'alpha');
 $type=GETPOST('type');
@@ -142,7 +143,13 @@ if ($socid) $param.="&socid=".$socid;
 if ($showbirthday) $param.="&showbirthday=1";
 if ($pid) $param.="&projectid=".$pid;
 if ($type) $param.="&type=".$type;
-if ($actioncode) $param.="&actioncode=".$actioncode;
+//if ($actioncode) $param.="&actioncode=".$actioncode;
+if (!empty($actioncode)) {
+	foreach ($actioncode as $ac)
+	{
+		$param.="&actioncode[]=".$ac;
+	}
+}
 
 $sql = "SELECT s.nom as societe, s.rowid as socid, s.client,";
 $sql.= " a.id, a.datep as dp, a.datep2 as dp2,";
@@ -164,7 +171,16 @@ $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."user as ud ON a.fk_user_done = ud.rowid";
 $sql.= " WHERE c.id = a.fk_action";
 $sql.= ' AND a.fk_user_author = u.rowid';
 $sql.= ' AND a.entity IN ('.getEntity().')';    // To limit to entity
-if ($actioncode) $sql.=" AND c.code='".$db->escape($actioncode)."'";
+//if ($actioncode) $sql.=" AND c.code='".$db->escape($actioncode)."'";
+if (!empty($actioncode)) {
+	$s = '';
+	foreach ($actioncode as $ac)
+	{
+		$s .= "'".$ac."',";
+	}
+	$s = rtrim($s, ',');
+	$sql.=" AND c.code IN (".$s.")";
+}
 if ($pid) $sql.=" AND a.fk_project=".$db->escape($pid);
 if (! $user->rights->societe->client->voir && ! $socid) $sql.= " AND (a.fk_soc IS NULL OR sc.fk_user = " .$user->id . ")";
 if ($socid) $sql.= " AND s.rowid = ".$socid;
@@ -211,7 +227,7 @@ if ($resql)
     $head = calendars_prepare_head('');
 
     dol_fiche_head($head, 'card', $langs->trans('Events'), 0, 'list');
-    print_actions_filter($form,$canedit,$status,$year,$month,$day,$showbirthday,$filtera,$filtert,$filterd,$pid,$socid,-1);
+    print_actions_filter($form,$canedit,$status,$year,$month,$day,$showbirthday,$filtera,$filtert,$filterd,$pid,$socid,-1, $actioncode);
     dol_fiche_end();
 
     // Add link to show birthdays
