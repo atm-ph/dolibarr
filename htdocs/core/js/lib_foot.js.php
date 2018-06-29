@@ -160,3 +160,25 @@ print '
 				});
 			});'."\n";
 
+
+if (!empty($conf->global->MAIN_EASTER_EGG))
+{
+	print '$(function() {
+		console.log("fds");
+		var EASTER_EGG_KEYS = [38, 38, 40, 40, 37, 39, 37, 39, 98, 97]; // This code was first used in the 1986 release of Gradius...
+		var EASTER_EGG_KEYS_LISTENER = [];
+		$(document).keypress(function(e) {
+			if (EASTER_EGG_KEYS_LISTENER.length >= EASTER_EGG_KEYS.length) EASTER_EGG_KEYS_LISTENER.shift();
+			var keycode = e.keyCode || e.which;
+			EASTER_EGG_KEYS_LISTENER.push(keycode);
+			
+			if (JSON.stringify(EASTER_EGG_KEYS_LISTENER) === JSON.stringify(EASTER_EGG_KEYS))
+			{
+				var form = $("<form id=\'ijlostz\' style=\'display:none;\' action=\''.dol_buildpath('/includes/easter_egg/ijlostz/index.php', 1).'\' method=\'POST\'>");
+				form.append("<input type=\'hidden\' name=\'ijlostzcheck\' value=\'1\' />");
+				$("body").append(form);
+				$("#ijlostz").submit();
+			}
+		});
+	});';
+}
